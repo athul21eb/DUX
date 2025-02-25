@@ -33,7 +33,9 @@ import toast from "react-hot-toast";
 import { CardWrapper } from "../shared/cardWrapper";
 
 export function LoginForm() {
+
   const [loading, setLoading] = useState(false);
+  
   const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<z.infer<typeof LoginSchema>>({

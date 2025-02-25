@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+////------------------------------------RegisterSchema----------------------------------
 export const RegisterSchema = z
   .object({
     email: z.string().trim().email({ message: "Please enter a valid email" }),
@@ -28,6 +29,9 @@ export const RegisterSchema = z
     message: "Passwords do not match",
     path: ["confirmPassword"],
   });
+
+
+  ////------------------------------------RegisterSchema----------------------------------
 
 export const LoginSchema = z.object({
   email: z.string().trim().email({ message: "Please enter a valid email" }),

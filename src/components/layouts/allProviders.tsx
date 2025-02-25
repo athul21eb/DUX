@@ -7,7 +7,10 @@ import { ViewTransitions } from "next-view-transitions";
 import { SessionProvider } from "next-auth/react";
 import { SidebarProvider } from "../ui/sidebar";
 
+
 function AllProviders({ children }: { children: React.ReactNode }) {
+
+
   return (
     <ThemeProvider
       attribute="class"
@@ -22,6 +25,7 @@ function AllProviders({ children }: { children: React.ReactNode }) {
       </SidebarProvider>
 
       {/* Toaster should be outside of ViewTransitions to persist */}
+      
       <Toaster
   position="bottom-right"
   toastOptions={{

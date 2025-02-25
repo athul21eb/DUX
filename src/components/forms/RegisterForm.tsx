@@ -1,5 +1,5 @@
 "use client";
-import { Button } from "@/components/ui/button";
+
 
 import {
   Form,
@@ -24,10 +24,14 @@ import GoogleLogin from "../shared/google-login";
 import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
 import { CardWrapper } from "../shared/cardWrapper";
+import { SubmitButton } from "../ui/submitButton";
 
 export default function RegisterForm() {
-  const [loading, setLoading] = useState(false);
+
+
+  // const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
   const form = useForm<z.infer<typeof RegisterSchema>>({
     resolver: zodResolver(RegisterSchema),
     defaultValues: {
@@ -39,17 +43,17 @@ export default function RegisterForm() {
   });
 
   const onSubmit = async (data: z.infer<typeof RegisterSchema>) => {
-    setLoading(true);
+    // setLoading(true);
     register(data).then((res) => {
       if (res.error) {
         toast.error(res.error);
-        setLoading(false);
+        // setLoading(false);
         return;
       }
       if (res.success) {
         toast.success(res.success);
 
-        setLoading(false);
+        // setLoading(false);
         form.reset();
       }
     });
@@ -167,9 +171,7 @@ export default function RegisterForm() {
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Loading..." : "Register"}
-              </Button>
+              <SubmitButton buttonText="Register" loadingText="Registering" />
             </form>
           </Form>
 

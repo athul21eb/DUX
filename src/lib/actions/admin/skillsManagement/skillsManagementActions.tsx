@@ -94,7 +94,9 @@ export async function updateSkill(
 
     const updatedSkill = await skillService.updateSkill(id, name, description);
     if (!updatedSkill) return { success: false, message: "Failed to update skill" };
+
     revalidatePath("/admin/skills");
+    
     return { success: true, message: "Skill updated successfully", data: updatedSkill };
   } catch (error) {
     console.error("Error updating skill:", error);
