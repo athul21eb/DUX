@@ -1,8 +1,8 @@
 "use server";
 
 import "server-only";
-import bcrypt from "bcryptjs";
-import { RegisterSchema } from "@/utils/validator/authforms";
+import bcrypt from "bcrypt";
+import {  SignUpFormInputType, SignUpFormSchema } from "@/utils/validator/authforms";
 import * as z from "zod";
 
 
@@ -14,10 +14,10 @@ import { generateVerificationToken } from "@/utils/token/token";
 // import { generateVerificationToken } from "@/lib/token";
 // import { sendVerificationEmail } from "@/lib/mail";
 
-export const register = async (data: z.infer<typeof RegisterSchema>) => {
+export const register = async (data: SignUpFormInputType) => {
   try {
     // Validate the input data
-    const validatedData = RegisterSchema.parse(data);
+    const validatedData = SignUpFormSchema.parse(data);
 
     //  If the data is invalid, return an error
     if (!validatedData) {

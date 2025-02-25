@@ -1,7 +1,9 @@
 'use server'
 
 import { revalidatePath } from "next/cache";
-import { database } from "./database";
+import { prisma } from "./database";
+import { Roles } from "@/server/core/entities/user";
+import { Role } from "@prisma/client";
 
 export interface UserData {
   name?: string;
@@ -18,7 +20,7 @@ export interface UserData {
 // Create a new user
 export const createUser = async (data: any) => {
   try {
-    const user = await database.user.create({
+    const user = await prisma.user.create({
       data,
     });
 
@@ -32,7 +34,7 @@ export const createUser = async (data: any) => {
 // Get user by email
 export const getUserByEmail = async (email: string) => {
   try {
-    const user = await database.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: {
         email,
       },
@@ -48,7 +50,7 @@ export const getUserByEmail = async (email: string) => {
 // Get user by ID
 export const getUserById = async (id: string) => {
   try {
-    const user = await database.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: {
         id,
       },
@@ -63,7 +65,7 @@ export const getUserById = async (id: string) => {
 // Get user by ID
 export const getUserByIdConnectMentor = async (id: string) => {
   try {
-    const user = await database.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: {
         id,
       },
@@ -83,7 +85,7 @@ export const getUserByIdConnectMentor = async (id: string) => {
 
 export const isEmailVerified = async (email: string): Promise<boolean> => {
   try {
-    const user = await database.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email },
       select: { emailVerified: true },
     });
@@ -99,7 +101,7 @@ export const isEmailVerified = async (email: string): Promise<boolean> => {
 
 export const updateUser = async (id: string, data: Partial<UserData>) => {
   try {
-    const user = await database.user.update({
+    const user = await prisma.user.update({
       where: {
         id,
       },
@@ -118,7 +120,7 @@ export const updateUser = async (id: string, data: Partial<UserData>) => {
 export const changePasswordByEmail = async (email: string, password: string) => {
   try {
     // Update the user's password
-    const user = await database.user.update({
+    const user = await prisma.user.update({
       where: { email },
       data: { password },
     });
@@ -135,7 +137,7 @@ export const changePasswordByEmail = async (email: string, password: string) => 
 
 export const getUserWithoutIDByEmail = async (email: string) => {
   try {
-    const user = await database.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email },
       select: {
         name: true,
@@ -164,10 +166,10 @@ export const getUserWithoutIDByEmail = async (email: string) => {
 };
 
 
-export const getAllUsersWithPagination = async (page: number = 1, pageSize: number = 10,role="user") => {
+export const getAllUsersWithPagination = async (page: number = 1, pageSize: number = 10,role: Roles ='user') => {
   try {
     const skip = (page - 1) * pageSize;
-    const users = await database.user.findMany({
+    const users = await prisma.user.findMany({
       where: {
         role: role,
       },
@@ -186,7 +188,7 @@ export const getAllUsersWithPagination = async (page: number = 1, pageSize: numb
       },
     });
 
-    const totalUsers = await database.user.count({
+    const totalUsers = await prisma.user.count({
       where: {
         role: 'user',
       },
@@ -208,7 +210,7 @@ export const getAllUsersWithPagination = async (page: number = 1, pageSize: numb
 
 export const toggleUserBlockStatus = async (id: string, isBlocked: boolean) => {
   try {
-    const user = await database.user.update({
+    const user = await prisma.user.update({
       where: { id },
       data: { isBlocked },
     });

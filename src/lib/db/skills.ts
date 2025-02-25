@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { database } from "./database";
+import { prisma } from "./database";
 import { Skill } from "@/types/skills";
 
 class SkillService {
@@ -99,4 +99,4 @@ class SkillService {
   }
 }
 
-export const skillService = new SkillService(database);
+export const skillService = new SkillService(prisma);

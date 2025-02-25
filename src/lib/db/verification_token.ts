@@ -1,5 +1,5 @@
 import { VerificationToken } from "@prisma/client";
-import { database } from "./database";
+import { prisma } from "./database";
 
 
 
@@ -10,7 +10,7 @@ export const createVerificationToken = async (
   expires: Date
 ): Promise<VerificationToken | null> => {
   try {
-    const verificationToken = await database.verificationToken.create({
+    const verificationToken = await prisma.verificationToken.create({
       data: {
         email,
         token,
@@ -29,7 +29,7 @@ export const createVerificationToken = async (
 
 export const getVerificationTokenByEmail = async (email: string) => {
   try {
-    const verificationToken = await database.verificationToken.findFirst({
+    const verificationToken = await prisma.verificationToken.findFirst({
         where: {
             email: email
         }
@@ -45,7 +45,7 @@ export const getVerificationTokenByEmail = async (email: string) => {
 
 export const getVerificationTokenByToken = async (token: string) => {
   try {
-    const verificationToken = await database.verificationToken.findFirst({
+    const verificationToken = await prisma.verificationToken.findFirst({
         where: {
             token: token
         }
@@ -62,7 +62,7 @@ export const getVerificationTokenByToken = async (token: string) => {
 //delete verification token
 export const deleteVerificationToken = async (id: string) => {
   try {
-    await database.verificationToken.delete({
+    await prisma.verificationToken.delete({
         where: {
             id: id
         }

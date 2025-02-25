@@ -3,7 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import type { NextAuthConfig } from "next-auth";
 import { LoginSchema } from "@/utils/validator/authforms";
 
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import { getUserByEmail } from "../db/user";
 
 
@@ -29,7 +29,7 @@ const authConfig: NextAuthConfig = {
       },
     }),
   ],
-  
+
 
 };
 

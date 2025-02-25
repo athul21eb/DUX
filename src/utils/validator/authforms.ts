@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 ////------------------------------------RegisterSchema----------------------------------
-export const RegisterSchema = z
+export const SignUpFormSchema = z
   .object({
     email: z.string().trim().email({ message: "Please enter a valid email" }),
     password: z
@@ -30,8 +30,9 @@ export const RegisterSchema = z
     path: ["confirmPassword"],
   });
 
+export type SignUpFormInputType = z.infer<typeof SignUpFormSchema>
 
-  ////------------------------------------RegisterSchema----------------------------------
+  ////------------------------------------LoginSchema----------------------------------
 
 export const LoginSchema = z.object({
   email: z.string().trim().email({ message: "Please enter a valid email" }),

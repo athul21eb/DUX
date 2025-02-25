@@ -1,33 +1,35 @@
-"use server";
-import 'server-only'
-import { Resend } from "resend";
-import { z } from 'zod';
-import { ForgotPasswordSchema } from '@/utils/validator/authforms';
+// Function to send OTP email
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { transporter } from "./verificationMail";
 
-export const sendForgotPasswordOtp = async (email: string, otp: string) => {
+
+
+
+export const sendOTP = async (email: string, otp: string) => {
     try {
-        await resend.emails.send({
-            from: "onboarding@resend.dev",
-            to: email,
-            subject: "Your Password Reset OTP",
-            html: `
-                <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; background: #f9f9f9;">
-                    <div style="max-width: 400px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-                        <h2 style="color: #333;">Password Reset Request</h2>
-                        <p style="font-size: 16px; color: #555;">Use the OTP below to reset your password:</p>
-                        <p style="font-size: 24px; font-weight: bold; color: #007bff; margin: 10px 0;">${otp}</p>
-                        <p style="font-size: 14px; color: #777;">This OTP is valid for 10 minutes.</p>
-                        <p style="font-size: 14px; color: #777;">If you did not request this, please ignore this email.</p>
-                    </div>
-                </div>
-            `,
-        });
+      const mailOptions = {
+        from: `"FIRE BOOTS WEBSITE" <${process.env.NODEMAILER_EMAIL}>`,
+        to: email,
+        subject: "Your OTP Code",
+        html: `
+          <div style="max-width: 600px; margin: auto; padding: 20px; font-family: Arial, sans-serif; background: #f9f9f9; border-radius: 8px; text-align: center;">
+              <div style="background: #28a745; padding: 20px; border-radius: 8px 8px 0 0; color: #ffffff;">
+                  <h1>OTP Code</h1>
+                  <p style="font-size: 16px;">Use the OTP below to verify your email.</p>
+              </div>
+              <div style="padding: 20px; background: #ffffff; border-radius: 0 0 8px 8px;">
+                  <p style="font-size: 18px; font-weight: bold; color: #333;">Your OTP: <span style="color: #28a745;">${otp}</span></p>
+                  <p style="font-size: 14px; color: #777; margin-top: 20px;">
+                      If you didn’t request this email, you can safely ignore it.
+                  </p>
+              </div>
+          </div>
+        `,
+      };
 
-        return { success: true, message: "OTP sent successfully." };
+      const info = await transporter.sendMail(mailOptions);
+      console.log("OTP Email Sent: ", info.messageId);
     } catch (error) {
-        console.error("Error sending OTP:", error);
-        return { success: false, message: "Failed to send OTP." };
+      console.error("Error sending OTP email: ", error);
     }
-};
+  };

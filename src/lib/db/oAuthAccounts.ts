@@ -1,9 +1,9 @@
 import { Account, Prisma } from "@prisma/client";
-import { database } from "./database";
+import { prisma } from "./database";
 
 export const GoogleOAuthAccountById = async (id: string) => {
   try {
-    const account = await database.account.findFirst({
+    const account = await prisma.account.findFirst({
       where: {
         userId: id,
         provider: "google",
@@ -25,7 +25,7 @@ export const createGoogleOAuthAccount = async (
   accountData: Omit<Account, "userId" |"provider" | "createdAt" | "updatedAt" | "type">
 ): Promise<boolean> => {
   try {
-    await database.account.create({
+    await prisma.account.create({
       data: {
         userId, // Connect to the existing user
         type: "oidc", // Set type explicitly
