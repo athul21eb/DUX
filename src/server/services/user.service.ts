@@ -173,6 +173,45 @@ export class UserService implements IUserService {
       throw new Error("failed to do email verification");
     }
   }
+
+  ////--------------change password -------------------
+
+  async changePasswordOfUser(email: string, password: string): Promise<IUser> {
+    try {
+      const existingUser = await this.userRepository.getUserByEmail(email);
+
+      if (!existingUser) {
+        throw new ValidationError("Email not found");
+      }
+
+      if (!existingUser.password || existingUser.googleId) {
+        throw new ValidationError(
+          " Google via Signin Account can not use change password"
+        );
+      }
+      const isPasswordMatch = await compare(password, existingUser.password);
+      if (isPasswordMatch) {
+        throw new ValidationError(
+          "new password must be different from old password"
+        );
+      }
+      const hashedPassword = await hash(password, 10);
+
+      const updatedUser =  await this.userRepository.updateUser(existingUser.id, {
+        password: hashedPassword,
+      });
+
+      if(!updatedUser){
+        throw new ValidationError("failed to change password");
+
+      }
+      return updatedUser
+    } catch (error) {
+      if (error instanceof ValidationError) throw error;
+      console.error("Error in user service changePasswordById func :", error);
+      throw new Error("failed to do change password");
+    }
+  }
 }
 
 export const userService = new UserService(prismaRepoInstance);

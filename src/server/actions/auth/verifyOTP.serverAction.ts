@@ -23,6 +23,7 @@ if(!email||!otp){
 await otpService.validateOtp(email,otp)
 
     return SuccessResponse('OTP verified successfully.');
+    
   } catch (error) {
   if (error instanceof ValidationError) {
       return ErrorResponse(error.message);

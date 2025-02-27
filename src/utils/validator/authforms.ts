@@ -58,7 +58,7 @@ export const ForgotPasswordSchema = z.object({
 export type TForgotPasswordFormType = z.infer<typeof ForgotPasswordSchema>
 
 ////--------------------------changPasswordSchema
-export const changPasswordSchema = z
+export const changePasswordSchema = z
   .object({
     newPassword: z
       .string()
@@ -77,4 +77,4 @@ export const changPasswordSchema = z
     message: "Passwords must match",
     path: ["confirmPassword"],
   });
-  export type TChangePasswordType = z.infer<typeof changPasswordSchema>
+  export type TChangePasswordType = z.infer<typeof changePasswordSchema>

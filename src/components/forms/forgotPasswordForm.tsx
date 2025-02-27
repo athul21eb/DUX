@@ -32,6 +32,7 @@ import {
 } from "../ui/input-otp";
 import { SendOTP_Server_Action } from "@/server/actions/auth/SendOTP.serverAction";
 import { verify_OTP_Server_Action } from "@/server/actions/auth/verifyOTP.serverAction";
+import { change_Password_Server_Action } from "@/server/actions/auth/changePassword.serverAction";
 
 export default function ForgotPasswordForm() {
   const [loading, setLoading] = useState(false);
@@ -121,7 +122,7 @@ export default function ForgotPasswordForm() {
 
   return passwordMode ? (
     <ChangePasswordForm
-      serverAction={changePasswordAction}
+      serverAction={change_Password_Server_Action}
       email={form.getValues("email")}
     />
   ) : (

@@ -5,8 +5,9 @@ import { changePasswordByEmail, getUserByEmail } from "@/lib/db/user";
 import { sendForgotPasswordOtp } from "@/utils/mail/otpMail";
 import { generateOtp } from "@/utils/token/otp";
 import {
-  changPasswordSchema,
+  changePasswordSchema,
   ForgotPasswordSchema,
+  TChangePasswordType,
 } from "@/utils/validator/authforms";
 import { z } from "zod";
 
@@ -83,11 +84,11 @@ export const verifyOtp = async (data: z.infer<typeof ForgotPasswordSchema>) => {
 ///change password
 
 export const changePasswordAction = async (
-  data: z.infer<typeof changPasswordSchema>,
+  data: TChangePasswordType,
   email: string
 ) => {
   try {
-    const validData = changPasswordSchema.parse(data);
+    const validData = changePasswordSchema.parse(data);
 
 
 

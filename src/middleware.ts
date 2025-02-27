@@ -29,7 +29,7 @@ const hasAccess = (pathname: string, role: string): boolean => {
 export default auth(async (req: NextRequest) => {
 
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  const role: string = token?.role ?? "guest";
+  const role = token?.role ??"undefined";
   const isBlocked :boolean = token?.isBlocked as boolean;
   console.log(token)
 

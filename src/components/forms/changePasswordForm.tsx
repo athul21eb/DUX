@@ -15,17 +15,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
-import { changPasswordSchema } from "@/utils/validator/authforms";
+import { changePasswordSchema, TChangePasswordType } from "@/utils/validator/authforms";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-
-type PasswordFormValues = z.infer<typeof changPasswordSchema>;
+import { useTransitionRouter } from "next-view-transitions";
+import { TErrorResponse, TSuccessResponse } from "@/utils/serverActionResponses/serverActionResponses";
 
 interface ChangePasswordProps {
   serverAction: (
-    data: z.infer<typeof changPasswordSchema>,
-    email: string
-  ) => Promise<any>;
+    email: string,
+    data:TChangePasswordType,
+
+  ) => Promise<TSuccessResponse<null>|TErrorResponse>;
   email: string;
 }
 
@@ -33,27 +34,31 @@ export default function ChangePasswordForm({
   serverAction,
   email,
 }: ChangePasswordProps) {
-  const router = useRouter();
+
+  const router = useTransitionRouter();
+
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const form = useForm<PasswordFormValues>({
-    resolver: zodResolver(changPasswordSchema),
+  const form = useForm<TChangePasswordType>({
+    resolver: zodResolver(changePasswordSchema),
     defaultValues: {
       newPassword: "",
       confirmPassword: "",
     },
   });
 
-  const onSubmit = async (data: PasswordFormValues) => {
-    await serverAction(data, email)
+  const onSubmit = async (data: TChangePasswordType) => {
+    setPending(true);
+    await serverAction(email,data)
       .then((res) => {
-        setPending(false);
+
         if (res.success) {
           toast.success(res.message);
-          setPending(false);
+         
           router.push("/login");
         } else {
+
           toast.error(res.message);
         }
       })
