@@ -14,6 +14,8 @@ export class VerificationTokenService implements IVerificationTokenService {
     email: string
   ): Promise<IVerificationToken> {
     try {
+
+      
       const token = uuidv4();
       let expiredInSecondsEpoch = new Date().getTime() + 1000 * 60 * 60 * 1; // 1 hours
       await this.repository.deleteByEmail(email);
@@ -24,29 +26,65 @@ export class VerificationTokenService implements IVerificationTokenService {
         expires: new Date(expiredInSecondsEpoch),
       });
 
-      await sendVerificationEmail(email, Database_stored_verification_token.token);
+      await sendVerificationEmail(
+        email,
+        Database_stored_verification_token.token
+      );
 
       return Database_stored_verification_token;
     } catch (error) {
-       console.error("Error in VerificationTokenService:", error);
+      console.error("Error in VerificationTokenService:", error);
       throw new Error("Failed to generate Verification Token");
     }
   }
 
   async getVerificationByEmail(
     email: string
-  ): Promise<IVerificationToken | null> {
-    return await this.repository.getByEmail(email);
+  ): Promise<IVerificationToken > {
+    try {
+      const existingToken = await this.repository.getByEmail(email);
+      if (!existingToken) {
+        throw new ValidationError("token doesn't exist for this email ");
+      }
+
+      return existingToken;
+    } catch (error) {
+      if (error instanceof ValidationError) throw error;
+      console.error("Error in token service:", error);
+      throw new Error("Failed to verify token");
+    }
   }
 
   async getVerificationByToken(
     token: string
-  ): Promise<IVerificationToken | null> {
-    return await this.repository.getByToken(token);
+  ): Promise<IVerificationToken > {
+  try {
+    const existingToken = await this.repository.getByToken(token);
+    if (!existingToken) {
+      throw new ValidationError("invalid token ");
+    }
+
+    return existingToken;
+  } catch (error) {
+    if (error instanceof ValidationError) throw error;
+    console.error("Error in token service:", error);
+    throw new Error("Failed to verify token");
+  }
   }
 
   async deleteVerificationById(id: string): Promise<IVerificationToken> {
-    return await this.repository.deleteById(id);
+   try{
+
+  const token =    await this.repository.deleteById(id);
+  if(!token){
+    throw new ValidationError(" failed to delete token ")
+  }
+     return token
+  } catch (error) {
+    if (error instanceof ValidationError) throw error;
+    console.error("Error in token service delete method:", error);
+    throw new Error("Failed to verify token");
+  }
   }
 
   async updateVerificationById(
@@ -57,5 +95,6 @@ export class VerificationTokenService implements IVerificationTokenService {
   }
 }
 
-
-export const verificationTokenService = new VerificationTokenService(prismaVerificationTokenInstance);
+export const verificationTokenService = new VerificationTokenService(
+  prismaVerificationTokenInstance
+);

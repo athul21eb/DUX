@@ -19,7 +19,7 @@ import { Link } from "next-view-transitions"
 
 export function NavBar() {
   const pathname = usePathname()
-  const { data: session, status } = useSession()
+  const {  status } = useSession()
   const [isScrolled, setIsScrolled] = useState(false)
 
   useEffect(() => {

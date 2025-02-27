@@ -20,7 +20,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
     const confirmationLink = `${process.env.NEXTAUTH_URL}/verify?token=${token}`;
 
     const mailOptions = {
-      from: `"FIRE BOOTS WEBSITE" <${process.env.NODEMAILER_EMAIL}>`,
+      from: `"DUX WEBSITE" <${process.env.NODEMAILER_EMAIL}>`,
       to: email,
       subject: "Verify Your Email - Welcome to Our Platform!",
       html: `

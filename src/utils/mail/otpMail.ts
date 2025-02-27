@@ -5,10 +5,10 @@ import { transporter } from "./verificationMail";
 
 
 
-export const sendOTP = async (email: string, otp: string) => {
+export const sendForgotPasswordOtp = async (email: string, otp: string) => {
     try {
       const mailOptions = {
-        from: `"FIRE BOOTS WEBSITE" <${process.env.NODEMAILER_EMAIL}>`,
+        from: `"DUX WEBSITE" <${process.env.NODEMAILER_EMAIL}>`,
         to: email,
         subject: "Your OTP Code",
         html: `

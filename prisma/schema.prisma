@@ -58,7 +58,7 @@ model VerificationToken {
   email   String
   token   String
   expires DateTime
-  
+
 @@index([email, token])
   @@unique([email, token])
 }
@@ -71,6 +71,7 @@ model OTP {
   expiresAt DateTime
 
   @@index([email, token])
+   @@unique([email, token])
 }
 
 model Mentor {

@@ -30,24 +30,34 @@ export const SignUpFormSchema = z
     path: ["confirmPassword"],
   });
 
-export type SignUpFormInputType = z.infer<typeof SignUpFormSchema>
+export type TSignUpFormInputType = z.infer<typeof SignUpFormSchema>
 
   ////------------------------------------LoginSchema----------------------------------
 
 export const LoginSchema = z.object({
   email: z.string().trim().email({ message: "Please enter a valid email" }),
   password: z
-    .string()
-    .trim()
-    .min(6, { message: "Password must be at least 6 characters long" })
-    .regex(/^\S*$/, { message: "Password must not contain spaces" }), // No spaces allowed
+  .string()
+  .trim()
+  .min(6, { message: "Password must be at least 6 characters long" })
+  .regex(/[A-Z]/, {
+    message: "Password must contain at least one uppercase letter",
+  })
+  .regex(/[^A-Za-z0-9]/, {
+    message: "Password must contain at least one special character",
+  })
+  .regex(/^\S*$/, { message: "Password must not contain spaces" }), // No spaces allowed
 });
+export type TLoginFormInputType = z.infer<typeof LoginSchema>
 
+//// ------------------ForgotPasswordSchema
 export const ForgotPasswordSchema = z.object({
   email: z.string().email("Invalid email").nonempty("Email is required"),
   otp: z.optional(z.string().length(6, "OTP must be 6 digits")), // Optional initially
 });
+export type TForgotPasswordFormType = z.infer<typeof ForgotPasswordSchema>
 
+////--------------------------changPasswordSchema
 export const changPasswordSchema = z
   .object({
     newPassword: z
@@ -67,3 +77,4 @@ export const changPasswordSchema = z
     message: "Passwords must match",
     path: ["confirmPassword"],
   });
+  export type TChangePasswordType = z.infer<typeof changPasswordSchema>

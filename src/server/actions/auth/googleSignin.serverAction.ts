@@ -1,14 +1,10 @@
 
-"use server"
+'use server'
 
-
-
-
-import { AuthError } from "next-auth";
 import { signIn } from "@/lib/auth/auth";
+import { AuthError } from "next-auth";
 
-
- const googleAuthenticate = async () => {
+export const googleAuthenticate = async () => {
   try {
 
 

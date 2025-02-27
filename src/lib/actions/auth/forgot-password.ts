@@ -1,5 +1,5 @@
 "use server";
-import bcrypt from "bcryptjs";
+import {compare,hash}from "bcrypt-ts";
 import { createOtp, deleteOtpByEmail, getOtpByEmail } from "@/lib/db/otp";
 import { changePasswordByEmail, getUserByEmail } from "@/lib/db/user";
 import { sendForgotPasswordOtp } from "@/utils/mail/otpMail";
@@ -103,7 +103,7 @@ export const changePasswordAction = async (
 
     }
 
-    const isPasswordMatch = await bcrypt.compare(
+    const isPasswordMatch = await compare(
       String(validData.newPassword),
       String(existingEmail.password)
     );
@@ -118,7 +118,7 @@ export const changePasswordAction = async (
     }
 
     //hash password
-    const hashedPassword = await bcrypt.hash(validData.newPassword, 10);
+    const hashedPassword = await hash(validData.newPassword, 10);
 
     await changePasswordByEmail(email, hashedPassword);
 

@@ -1,5 +1,38 @@
 # 5-Day Development Schedule - Next.js Fullstack App (NextAuth.js, Prisma, Neon PSQL)
 
+
+
+
+server action demo
+
+
+
+'use server'
+
+import { ErrorResponse, SuccessResponse, TErrorResponse, TSuccessResponse } from "@/utils/serverActionResponses/serverActionResponses"
+
+
+
+const Email_Verification_Server_Action = async(token:string):Promise<TSuccessResponse<null>|TErrorResponse>=>{
+
+
+  try {
+
+    return SuccessResponse('success');
+  } catch (error) {
+  if (error instanceof ValidationError) {
+      return ErrorResponse(error.message);
+    }
+    console.error(error, "error in  server action");
+    return ErrorResponse(
+      error instanceof Error ? error.message : "failed to"
+    );
+  }
+
+
+}
+
+
 **Overall Strategy:**
 
 1.  Focus on Core Authentication and User Management First.

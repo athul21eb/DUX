@@ -2,7 +2,7 @@
 'use server'
 
 import { z } from "zod";
-import { database } from "@/lib/db/database";
+import { prisma } from "@/lib/db/database";
 import { uploadImage } from "@/utils/cloudinary/cloudinary";
 import { RegisterMentorformSchema } from "@/utils/validator/registerMentor";
 import { updateUser } from "@/lib/db/user";
@@ -49,8 +49,8 @@ export async function CreateMentorProfileAction(
       }
     }
 
-    // Create the mentor profile in the database
-    const mentorProfile = await database.mentor.create({
+    // Create the mentor profile in the prisma
+    const mentorProfile = await prisma.mentor.create({
       data: {
         userId: validatedData.userId, // userId is now guaranteed to be a string
         aboutMe: validatedData.aboutMe,

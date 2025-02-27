@@ -10,12 +10,12 @@ import {
   TSuccessResponse,
 } from "@/utils/serverActionResponses/serverActionResponses";
 import {
-  SignUpFormInputType,
+  TSignUpFormInputType,
   SignUpFormSchema,
 } from "@/utils/validator/authforms";
 
 export const SignUp_ServerAction = async (
-  formData: SignUpFormInputType
+  formData: TSignUpFormInputType
 ): Promise<TSuccessResponse<null> | TErrorResponse> => {
   try {
     const validatedData = SignUpFormSchema.parse(formData);
@@ -37,14 +37,17 @@ export const SignUp_ServerAction = async (
     if (!createdUser) {
       throw new ValidationError("Failed to Signup the User ");
     }
-//// send email verification link 
+//// send email verification link
     const verification_token_Send_Or_Not =
       await verificationTokenService.createVerificationTokenAndSend(email);
 
     if (!verification_token_Send_Or_Not) {
       throw new ValidationError("Failed to Send verification Link");
     }
+
+
     return SuccessResponse("Email Verification was sent");
+
   } catch (error) {
     if (error instanceof ValidationError) {
       return ErrorResponse(error.message);

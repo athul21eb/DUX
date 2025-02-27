@@ -14,6 +14,8 @@ import { Link } from "next-view-transitions";
 import toast from "react-hot-toast";
 
 export function UserNav() {
+
+
   const { data: session, status } = useSession();
 
   if (status === "loading") {

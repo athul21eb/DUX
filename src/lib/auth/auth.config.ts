@@ -3,12 +3,16 @@ import Credentials from "next-auth/providers/credentials";
 import type { NextAuthConfig } from "next-auth";
 import { LoginSchema } from "@/utils/validator/authforms";
 
-import bcrypt from "bcrypt";
-import { getUserByEmail } from "../db/user";
 
 
 
-const authConfig: NextAuthConfig = {
+
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+  throw new Error("Missing Google OAuth environment variables");
+}
+
+
+ const authConfig: NextAuthConfig = {
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -20,17 +24,12 @@ const authConfig: NextAuthConfig = {
         if (!validatedData.success) return null;
 
         const { email, password } = validatedData.data;
-        const user = await getUserByEmail(email);
 
-        if (!user || !user.password) return null;
 
-        const isPasswordMatch = await bcrypt.compare(password, user.password);
-        return isPasswordMatch ? user : null;
+        return { email, password };
       },
     }),
   ],
-
-
 };
 
-export default authConfig;
+export default authConfig

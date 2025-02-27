@@ -13,12 +13,13 @@ import {
   resendVerificationToken,
 } from "@/lib/actions/auth/verify-token";
 import { Button } from "../ui/button";
+import { Email_Verification_Server_Action } from "@/server/actions/auth/emailVerificationToken.serverAction";
 
 const VerifyEmailPage = () => {
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(true);
-  const [email, setEmail] = useState<string>("");
+
 
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -31,17 +32,18 @@ const VerifyEmailPage = () => {
     }
 
     try {
-      const res = await emailVerificationByToken(token);
+      const res = await Email_Verification_Server_Action(token);
+
       if (res.success) {
-        setSuccess(res.success);
+        setSuccess(res.message);
         setError(undefined);
       } else {
-        setError(res.error);
-        if (res.error === "Token has expired") {
-          setEmail(res?.email ?? "");
-          await resendVerificationToken(res?.email ?? "");
-          setError("Token expired. A new verification email has been sent.");
-        }
+        setError(res.message);
+        // if (res.message === "Token has expired") {
+
+        //   await resendVerificationToken(email);
+        //   setError("Token expired. A new verification email has been sent.");
+        // }
       }
     } catch {
       setError("An unexpected error occurred");

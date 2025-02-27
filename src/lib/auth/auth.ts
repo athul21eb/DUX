@@ -1,38 +1,33 @@
 import NextAuth from "next-auth";
 
-
 import authConfig from "./auth.config";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { database } from "../db/database";
+import { prisma } from "../db/database";
 
-import { getUserByEmail, getUserById, updateUser } from "../db/user";
-import {
-  createGoogleOAuthAccount,
-  GoogleOAuthAccountById,
-} from "../db/oAuthAccounts";
+
+
+import { userService } from "@/server/services/user.service";
+import { googleAccountService } from "@/server/services/googleAccount.service";
 
 export const {
   auth,
   handlers: { GET, POST },
   signIn,
   signOut,
-
 } = NextAuth({
-
   ...authConfig,
 
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
-        const existingUser = await getUserByEmail(user.email ?? "");
+        const existingUser =  await userService.getUserDetailsByEmail(user.email ?? "");
 
         if (existingUser) {
-          const existingGoogleAccount = await GoogleOAuthAccountById(
-            existingUser.id ?? ""
-          );
+          const existingGoogleAccount =
+            await googleAccountService.getGoogleOAuthAccount(existingUser.id ?? "");
 
           if (!existingGoogleAccount) {
-            await createGoogleOAuthAccount(existingUser.id, {
+            await googleAccountService.registerGoogleOAuthAccount(existingUser.id, {
               providerAccountId: account.providerAccountId,
               access_token: account.access_token ?? null,
               refresh_token: account.refresh_token ?? null,
@@ -44,26 +39,24 @@ export const {
             });
           }
 
-          if (!existingUser.emailVerified) {
-            await updateUser(existingUser.id, { emailVerified: new Date() });
+          if (!existingUser.emailVerified || !existingUser.googleId) {
+            await userService.updateGoogleIdOfUser(
+              existingUser.id,
+              account.providerAccountId
+            );
           }
 
           return true;
         }
       }
 
-      if (account?.provider !== "credentials") {
         return true;
-      }
 
-      const existingUser = await getUserById(user.id ?? "");
-
-      return !!existingUser?.emailVerified;
     },
     async jwt({ token }) {
-      if (!token.sub) return token;
+      if (!token.email) return token;
 
-      const existingUser = await getUserById(token.sub);
+      const existingUser = await userService.getUserDetailsByEmail(token.email);
 
       if (!existingUser) return token;
 
@@ -71,31 +64,30 @@ export const {
       token.email = existingUser.email;
       token.image = existingUser.image as string;
       token.role = existingUser.role as string; // Ensure a default role is assigned
-      token.isOAuth = !existingUser.password;
+      token.googleId = existingUser.googleId;
       token.isBlocked = existingUser.isBlocked as boolean;
 
       return token;
     },
 
     async session({ token, session }) {
+
+
       return {
         ...session,
         user: {
           ...session.user,
           id: token.sub,
-          isOAuth: token.isOAuth,
-          image:token.image as string,
+          googleId: token.googleId,
+          image: token.image as string,
           role: token.role as string,
-          isBlocked:token.isBlocked as boolean // Ensure a default role
+          isBlocked: token.isBlocked as boolean, // Ensure a default role
         },
       };
     },
-
   },
   session: {
     strategy: "jwt",
   },
-  adapter: PrismaAdapter(database),
-
-
+  adapter: PrismaAdapter(prisma),
 });

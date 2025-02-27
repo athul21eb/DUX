@@ -1,8 +1,10 @@
-import authConfig from "@/lib/auth/auth.config";
+
 import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import type { NextRequest } from "next/server";
+import authConfig from "./lib/auth/auth.config";
+
 
 const { auth } = NextAuth(authConfig);
 
@@ -25,10 +27,11 @@ const hasAccess = (pathname: string, role: string): boolean => {
 
 // Middleware function
 export default auth(async (req: NextRequest) => {
-  
+
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const role: string = token?.role ?? "guest";
   const isBlocked :boolean = token?.isBlocked as boolean;
+  console.log(token)
 
   const isAuthenticated = !!token;
   const { pathname } = req.nextUrl;

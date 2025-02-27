@@ -14,8 +14,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
-import { ForgotPasswordSchema } from "@/utils/validator/authforms";
-import VerifyEmailAndSendOtp, {
+import {
+  ForgotPasswordSchema,
+  TForgotPasswordFormType,
+} from "@/utils/validator/authforms";
+import {
   changePasswordAction,
   verifyOtp,
 } from "@/lib/actions/auth/forgot-password";
@@ -27,21 +30,20 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "../ui/input-otp";
-
-// Type definition for the form
-type ForgotPasswordFormType = z.infer<typeof ForgotPasswordSchema>;
+import { SendOTP_Server_Action } from "@/server/actions/auth/SendOTP.serverAction";
+import { verify_OTP_Server_Action } from "@/server/actions/auth/verifyOTP.serverAction";
 
 export default function ForgotPasswordForm() {
   const [loading, setLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(60);
+  const [timeLeft, setTimeLeft] = useState(30);
   const [passwordMode, setPasswordMode] = useState(false);
   const router = useRouter();
   const [timer, setTimer] = useState<ReturnType<typeof setInterval> | null>(
     null
   );
 
-  const form = useForm<ForgotPasswordFormType>({
+  const form = useForm<TForgotPasswordFormType>({
     resolver: zodResolver(ForgotPasswordSchema),
     defaultValues: { email: "", otp: "otpput" },
     mode: "onChange",
@@ -61,7 +63,7 @@ export default function ForgotPasswordForm() {
     }
   }, [otpSent, timeLeft]);
 
-  const onSubmit = (data: ForgotPasswordFormType) => {
+  const onSubmit = (data: TForgotPasswordFormType) => {
     if (otpSent) {
       verifyOtpFromForm(data);
     } else {
@@ -70,18 +72,18 @@ export default function ForgotPasswordForm() {
   };
 
   // Function to send OTP
-  const sendOtp = async (data: Pick<ForgotPasswordFormType, "email">) => {
+  const sendOtp = async (data: Pick<TForgotPasswordFormType, "email">) => {
     console.log("clicked");
     setLoading(true);
 
-    await VerifyEmailAndSendOtp(data)
+    await SendOTP_Server_Action(data)
       .then((res) => {
         if (res.success) {
           toast.success(res.message);
           form.setValue("otp", "");
           setOtpSent(true);
 
-          setTimeLeft(60);
+          setTimeLeft(30);
         } else {
           toast.error(res.message);
         }
@@ -96,9 +98,9 @@ export default function ForgotPasswordForm() {
   };
 
   // Function to handle OTP verification
-  const verifyOtpFromForm = async (data: ForgotPasswordFormType) => {
+  const verifyOtpFromForm = async (data: TForgotPasswordFormType) => {
     setLoading(true);
-    await verifyOtp(data)
+    await verify_OTP_Server_Action(data)
       .then((res) => {
         if (res.success) {
           toast.success(res.message);
@@ -153,25 +155,24 @@ export default function ForgotPasswordForm() {
                 <label className="block text-sm font-medium">Enter OTP</label>
                 <FormControl>
                   {/* <Input {...field} type="password" placeholder="Enter OTP" /> */}
-                 <div className="flex w-full justify-center items-center">
-
-                 <InputOTP maxLength={6} {...field} >
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                    </InputOTPGroup>
-                    <InputOTPSeparator />
-                    <InputOTPGroup>
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                    </InputOTPGroup>
-                    <InputOTPSeparator />
-                    <InputOTPGroup>
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                 </div>
+                  <div className="flex w-full justify-center items-center">
+                    <InputOTP maxLength={6} {...field}>
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                      </InputOTPGroup>
+                      <InputOTPSeparator />
+                      <InputOTPGroup>
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                      </InputOTPGroup>
+                      <InputOTPSeparator />
+                      <InputOTPGroup>
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -12,10 +12,10 @@ import { Input } from "@/components/ui/input";
 
 import DUX from "../ui/Dux";
 import { Link } from "next-view-transitions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
-  SignUpFormInputType,
+  TSignUpFormInputType,
   SignUpFormSchema,
 } from "@/utils/validator/authforms";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,10 +30,14 @@ import { SubmitButton } from "../ui/submitButton";
 import { SignUp_ServerAction } from "@/server/actions/auth/signUp.serverAction";
 
 export default function SignUpForm() {
-  // const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  const form = useForm<SignUpFormInputType>({
+  useEffect(() => {
+    return () => {
+      toast.dismiss();
+    };
+  }, []);
+  const form = useForm<TSignUpFormInputType>({
     resolver: zodResolver(SignUpFormSchema),
     defaultValues: {
       email: "",
@@ -43,16 +47,26 @@ export default function SignUpForm() {
     },
   });
 
-  const onSubmit = async (data: SignUpFormInputType) => {
-    SignUp_ServerAction(data).then((res) => {
-      if (!res.success) {
-        toast.error(`${res.message} )`);
-        return;
-      }
+  const onSubmit = async (data: TSignUpFormInputType) => {
+    setLoading(true);
+    SignUp_ServerAction(data)
+      .then((res) => {
+        toast.dismiss();
+        if (!res.success) {
+          toast.error(res.message, { duration: Infinity });
 
-      toast.success(res.message);
-      form.reset();
-    });
+          return;
+        }
+
+        toast.success(res.message, { duration: Infinity });
+        form.reset();
+      })
+      .catch((e) => {
+        toast.error("failed to  login user ");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   return (
@@ -169,7 +183,11 @@ export default function SignUpForm() {
               />
             </div>
 
-            <SubmitButton buttonText="Register" loadingText="Registering" />
+            <SubmitButton
+              buttonText="Register"
+              loadingText="Registering...."
+              loading={loading}
+            />
           </form>
         </Form>
 
