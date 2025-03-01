@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import toast, { Toaster } from 'react-hot-toast';
 import { Trash2, Loader2 } from 'lucide-react';
 import { getAllUsersWithPagination, toggleUserBlockStatus } from '@/lib/db/user';
+import ReusableTable from '../shared/reusableTable';
 
 type User = {
   id: string;
@@ -122,6 +123,15 @@ const fetchUsers = async () => {
 
 
       <div className="flex justify-between items-center">
+
+      <ReusableTable
+  headers={["Name", "Email", "Role"]}
+  rows={[
+    ["John Doe", "john@example.com", <Button>hi</Button>],
+    ["Jane Smith", "jane@example.com", "User"]
+  ]}
+  onClickRow={(id) => console.log(`Clicked row with ID: ${id}`)}
+/>
         <h1 className="text-2xl font-bold">Users ({userData.totalUsers})</h1>
       </div>
 

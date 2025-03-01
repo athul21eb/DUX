@@ -1,9 +1,10 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Form } from "../ui/form";
+import { Button } from "../ui/button";
 import { ReactNode } from "react";
 
-import { Form } from "react-hook-form";
-import { Button } from "../ui/button";
-// Form Dialog for adding/editing skills
+
 interface FormDialogProps<T> {
   isOpen: boolean;
   onClose: () => void;

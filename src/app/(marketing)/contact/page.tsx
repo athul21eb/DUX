@@ -7,4 +7,5 @@ function ContactPage() {
   )
 }
 
-export default ContactPage
+export default   ContactPage
+

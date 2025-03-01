@@ -28,20 +28,27 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"; //
 import { UpdateUserProfileAction } from "@/lib/actions/user/updateProfile";
 import { UserFormValues, UserSchema } from "@/utils/validator/userformupdate";
 import { getSession, useSession } from "next-auth/react";
+import { IUser } from "@/server/core/entities/user";
+import { Gender, UserProfileDTO } from "@/server/core/dtos/userDtos";
+import { update_User_Details_Server_Action } from "@/server/actions/user/updateUserDetails.serverAction";
 
-export function UserProfileForm({ user }: any) {
+
+export function UserProfileForm({ user }: { user: UserProfileDTO }) {
   const [loading, setLoading] = useState<boolean>(false);
   const [imagePreview, setImagePreview] = useState<string>(user?.image || "");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imageError, setImageError] = useState<boolean>(false); // State for image loading error
   const { data: session, update } = useSession();
+
+  
   const form = useForm<UserFormValues>({
     resolver: zodResolver(UserSchema),
     defaultValues: {
       name: user?.name || "",
       email: user?.email || "",
       phone: user?.phone || "",
-      gender: user?.gender || "",
+      gender: (user?.gender as Gender) || undefined,
+
       dob: user?.dob ? new Date(user.dob) : undefined,
       image: user?.image || "",
     },
@@ -53,7 +60,7 @@ export function UserProfileForm({ user }: any) {
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
         // File size is greater than 10MB
-        
+
         toast.error("Please select an image less than 10MB.");
         return;
       }
@@ -64,7 +71,6 @@ export function UserProfileForm({ user }: any) {
     }
   };
 
-
   const handleImageError = () => {
     setImageError(true); // Set error state if image fails to load
   };
@@ -73,14 +79,14 @@ export function UserProfileForm({ user }: any) {
       setLoading(true);
       console.log("Form submitted", data);
 
-      const res = await UpdateUserProfileAction(data, selectedImage);
+      const res = await update_User_Details_Server_Action(data, selectedImage);
 
       if (res.success) {
-        if (res.user?.name || res.user?.image) {
+        if (res.data?.name || res.data?.image) {
           const updatedUser = {
             ...session?.user, // Ensure session exists
-            name: res.user?.name,
-            image: res.user?.image, // Update with new image URL
+            name: res.data?.name,
+            image: res.data?.image, // Update with new image URL
           };
 
           await update({ user: updatedUser });

@@ -14,7 +14,8 @@ const navItems = [
   { href: "/contact", label: "Contact Us" },
 ]
 
-export function MobileNav() {
+export function MobileNav({setOpen}:{setOpen:Function}) {
+
   const pathname = usePathname()
 
   return (
@@ -27,7 +28,7 @@ export function MobileNav() {
           transition={{ duration: 0.2 }}
         >
           <Button asChild variant={pathname === item.href ? "default" : "ghost"} className="w-full justify-start">
-            <Link href={item.href}>{item.label}</Link>
+            <Link href={item.href} onClick={()=>setOpen(false)}>{item.label}</Link>
           </Button>
         </motion.div>
       ))}

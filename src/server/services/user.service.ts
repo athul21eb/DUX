@@ -1,4 +1,8 @@
-import { createUserDTO, loginUserDTO } from "../core/dtos/userDtos";
+import {
+  createUserDTO,
+  loginUserDTO,
+  updateUserDTO,
+} from "../core/dtos/userDtos";
 import { IUser } from "../core/entities/user";
 import { ValidationError } from "../core/errors/errors";
 import { IUserRepository } from "../core/interfaces/user.repository.interface";
@@ -8,6 +12,7 @@ import { compare, hash } from "bcrypt-ts";
 import { prismaRepoInstance } from "../repositories/prisma.user.repository";
 import { signIn } from "@/lib/auth/auth";
 import { AuthError } from "next-auth";
+import { uploadImage } from "@/utils/cloudinary/cloudinary";
 
 export class UserService implements IUserService {
   constructor(private userRepository: IUserRepository) {}
@@ -197,19 +202,69 @@ export class UserService implements IUserService {
       }
       const hashedPassword = await hash(password, 10);
 
-      const updatedUser =  await this.userRepository.updateUser(existingUser.id, {
-        password: hashedPassword,
-      });
+      const updatedUser = await this.userRepository.updateUser(
+        existingUser.id,
+        {
+          password: hashedPassword,
+        }
+      );
 
-      if(!updatedUser){
+      if (!updatedUser) {
         throw new ValidationError("failed to change password");
-
       }
-      return updatedUser
+      return updatedUser;
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in user service changePasswordById func :", error);
       throw new Error("failed to do change password");
+    }
+  }
+
+  //// --------------------update user profile Details
+
+  async updateUserDetails(data: updateUserDTO, image: File|null): Promise<IUser> {
+    try {
+      const { name, email, phone, gender, dob } = data;
+      const user = await this.userRepository.getUserByEmail(email);
+      if (!user) {
+        throw new ValidationError("user not found ");
+      }
+
+      let imageUrl = user.image;
+      if (image) {
+        try {
+          imageUrl = await uploadImage(image);
+        } catch (error) {
+          console.error("failed to upload image", error);
+          throw new ValidationError("failed to upload the image");
+        }
+      }
+      const isDataUnchanged =
+        user.name === name &&
+        user.phone === phone &&
+        user.gender === gender &&
+        user.dob === dob &&
+        user.image === imageUrl;
+
+      if (isDataUnchanged) {
+        return user;
+      }
+
+      const updatedUser = await this.userRepository.updateUser(user.id, {
+        name,
+        phone,
+        gender,
+        dob,
+        image: imageUrl ?? undefined,
+      });
+      if (!updatedUser) {
+        throw new ValidationError("failed to update the user ");
+      }
+      return updatedUser;
+    } catch (error) {
+      if (error instanceof ValidationError) throw error;
+      console.error("Error in user service update user func :", error);
+      throw new Error("failed to do update user");
     }
   }
 }

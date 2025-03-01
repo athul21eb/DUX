@@ -7,9 +7,9 @@ import { Link } from "next-view-transitions";
 
 export default async function MentorsPage() {
 
-   const result = await getAllUsersWithPagination(1,5,"mentor");
-
+   const result = await getAllUsersWithPagination(1,5);
    console.log(result);
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -33,7 +33,7 @@ export default async function MentorsPage() {
           <SearchBar />
           <div className="grid gap-8 lg:grid-cols-[240px_1fr]">
             <FilterSidebar />
-            <MentorGrid mentors={result?.users??[]}/>
+            <MentorGrid mentors={[]}/>
           </div>
         </div>
       </main>

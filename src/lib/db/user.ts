@@ -166,27 +166,31 @@ export const getUserWithoutIDByEmail = async (email: string) => {
 };
 
 
-export const getAllUsersWithPagination = async (page: number = 1, pageSize: number = 10,role: Roles ='user') => {
+export const getAllUsersWithPagination = async (page: number = 1, pageSize: number = 10,role: Roles ='mentor') => {
   try {
     const skip = (page - 1) * pageSize;
     const users = await prisma.user.findMany({
       where: {
-        role: role,
+        role,
       },
       skip,
       take: pageSize,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        gender: true,
-        dob: true,
-        image: true,
-        role: true,
-        isBlocked:true
-      },
+      include:{mentorProfile:true},
+      // select: {
+      //   id: true,
+      //   name: true,
+      //   email: true,
+      //   phone: true,
+      //   gender: true,
+      //   dob: true,
+      //   image: true,
+      //   role: true,
+      //   isBlocked: true,
+      //   mentorProfile: true, // Now included properly
+      // },
     });
+
+console.log(users,'llllllllllllllll')
 
     const totalUsers = await prisma.user.count({
       where: {

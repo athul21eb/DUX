@@ -73,7 +73,7 @@ export function LoginForm() {
     });
   };
   return (
-    <div className={"flex flex-col gap-6 mt-16"}>
+    <div className={"flex flex-col gap-6 p-6"}>
       <CardWrapper title={<DUX />} description="Welcome Back">
         <div className="flex flex-col gap-4 mb-4">
           <GoogleLogin />

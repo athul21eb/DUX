@@ -4,8 +4,6 @@ import authConfig from "./auth.config";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "../db/database";
 
-
-
 import { userService } from "@/server/services/user.service";
 import { googleAccountService } from "@/server/services/googleAccount.service";
 
@@ -20,38 +18,48 @@ export const {
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
-        const existingUser =  await userService.getUserDetailsByEmail(user.email ?? "");
+        try {
+          const existingUser = await userService.getUserDetailsByEmail(
+            user.email ?? ""
+          );
 
-        if (existingUser) {
-          const existingGoogleAccount =
-            await googleAccountService.getGoogleOAuthAccount(existingUser.id ?? "");
+          if (existingUser) {
+            const existingGoogleAccount =
+              await googleAccountService.getGoogleOAuthAccount(
+                existingUser.id ?? ""
+              );
 
-          if (!existingGoogleAccount) {
-            await googleAccountService.registerGoogleOAuthAccount(existingUser.id, {
-              providerAccountId: account.providerAccountId,
-              access_token: account.access_token ?? null,
-              refresh_token: account.refresh_token ?? null,
-              expires_at: account.expires_at ?? null,
-              token_type: account.token_type ?? null,
-              scope: account.scope ?? null,
-              id_token: account.id_token ?? null,
-              session_state: String(account.session_state) ?? null,
-            });
+            if (!existingGoogleAccount) {
+              await googleAccountService.registerGoogleOAuthAccount(
+                existingUser.id,
+                {
+                  providerAccountId: account.providerAccountId,
+                  access_token: account.access_token ?? null,
+                  refresh_token: account.refresh_token ?? null,
+                  expires_at: account.expires_at ?? null,
+                  token_type: account.token_type ?? null,
+                  scope: account.scope ?? null,
+                  id_token: account.id_token ?? null,
+                  session_state: String(account.session_state) ?? null,
+                }
+              );
+            }
+
+            if (!existingUser.emailVerified || !existingUser.googleId) {
+              await userService.updateGoogleIdOfUser(
+                existingUser.id,
+                account.providerAccountId
+              );
+            }
           }
+        } catch (error) {
 
-          if (!existingUser.emailVerified || !existingUser.googleId) {
-            await userService.updateGoogleIdOfUser(
-              existingUser.id,
-              account.providerAccountId
-            );
-          }
+          console.log("new google user ")
 
-          return true;
         }
       }
 
-        return true;
-
+      return true;
     },
     async jwt({ token }) {
       if (!token.email) return token;
@@ -71,8 +79,6 @@ export const {
     },
 
     async session({ token, session }) {
-
-
       return {
         ...session,
         user: {
@@ -86,6 +92,7 @@ export const {
       };
     },
   },
+  
   session: {
     strategy: "jwt",
   },

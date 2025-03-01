@@ -2,7 +2,7 @@
 
 'use server';
 
-import { database } from '@/lib/db/database';
+import { prisma } from '@/lib/db/database';
 import { revalidatePath } from 'next/cache';
 
 
@@ -16,7 +16,7 @@ export async function getMentorApprovalById(mentorId?: string) {
   }
 
   try {
-    const mentor = await database.mentor.findUnique({
+    const mentor = await prisma.mentor.findUnique({
       where: { id: mentorId },
       include: {
         user: true,
@@ -63,7 +63,7 @@ export async function getAllMentorsApprovals(page: number = 1, pageSize: number 
     const skip = (page - 1) * pageSize;
 
     const [mentors, totalCount] = await Promise.all([
-      database.mentor.findMany({
+      prisma.mentor.findMany({
         where: {
           verified: false,
         },
@@ -83,7 +83,7 @@ export async function getAllMentorsApprovals(page: number = 1, pageSize: number 
           createdAt: 'desc', // Or any appropriate ordering
         },
       }),
-      database.mentor.count({
+      prisma.mentor.count({
         where: {
           verified: false,
         },
@@ -124,7 +124,7 @@ export async function getAllMentorsApprovals(page: number = 1, pageSize: number 
 // Function to approve a mentor (set verified to true)
 export async function approveMentor(mentorId: string) {
   try {
-    const updatedMentor = await database.mentor.update({
+    const updatedMentor = await prisma.mentor.update({
       where: {
         id: mentorId,
       },
@@ -133,7 +133,7 @@ export async function approveMentor(mentorId: string) {
       },
     });
 
-    const user = await database.user.update({
+    const user = await prisma.user.update({
       where: {
         id:updatedMentor?.userId,
       },
@@ -162,7 +162,7 @@ export async function approveMentor(mentorId: string) {
 // Function to reject a mentor (delete the mentor record)
 export async function rejectMentor(mentorId: string) {
   try {
-    const deletedMentor = await database.mentor.delete({
+    const deletedMentor = await prisma.mentor.delete({
       where: {
         id: mentorId,
       },
@@ -198,8 +198,8 @@ export async function rejectMentor(mentorId: string) {
 //     // Validate the data against the schema
 //     const validatedData = skillSchema.parse(data);
 
-//     // Create the skill in the database
-//     const newSkill = await database.skill.create({
+//     // Create the skill in the prisma
+//     const newSkill = await prisma.skill.create({
 //       data: {
 //         name: validatedData.name,
 //         description: validatedData.description,

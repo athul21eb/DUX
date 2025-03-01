@@ -10,7 +10,7 @@ class SkillService {
   }
 
   // Create a new skill with error handling
-  async createSkill(name: string, description?: string): Promise<Skill | null> {
+  async createSkill(name: string, description: string): Promise<Skill | null> {
     try {
       return await this.prisma.skill.create({
         data: { name, description },

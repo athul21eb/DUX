@@ -17,17 +17,26 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://yourdomain.com"),
   title: {
-    default:"DUX",
-    template:"%s | DUX "
-  },// Set the tab title to "DUX | LOGIN"
-  description: "DUX THE MENTORS APP",
-  icons: {
-    icon: "/dux.svg",
-    shortcut: "/dux.svg",
-    apple: "/dux.svg",
+    default: "DUX - Professional Mentorship Platform",
+    template: "%s | DUX",
   },
-};
+  description: "Find the perfect mentor to guide your career journey and achieve your professional goals.",
+  keywords: ["mentorship", "career guidance", "professional development", "coaching", "India"],
+  authors: [{ name: "DUX Team" }],
+  creator: "DUX",
+  publisher: "DUX",
+  formatDetection: {
+    email: false,
+    telephone: false,
+    address: false,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+}
 
 export default  function RootLayout({
   children,modal

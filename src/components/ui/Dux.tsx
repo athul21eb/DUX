@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Link } from "next-view-transitions";
 
 export default function DUX() {
-  const text = "Dux";
+  const text = "DUX";
 
   return (
     <Link href="/">
@@ -13,7 +13,7 @@ export default function DUX() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          <motion.h1 className=" text-5xl font-extrabold text-blue-600 text-center flex">
+          <motion.h1 className="text-4xl lg:text-5xl font-extrabold text-blue-600 text-center flex">
             {text.split("").map((letter, index) => (
               <motion.span
                 key={index}

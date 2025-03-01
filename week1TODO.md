@@ -7,13 +7,19 @@ server action demo
 
 
 
+'
+
+
+
+
 'use server'
 
+import { ValidationError } from "@/server/core/errors/errors";
 import { ErrorResponse, SuccessResponse, TErrorResponse, TSuccessResponse } from "@/utils/serverActionResponses/serverActionResponses"
 
 
 
-const Email_Verification_Server_Action = async(token:string):Promise<TSuccessResponse<null>|TErrorResponse>=>{
+const _Server_Action = async():Promise<TSuccessResponse<null>|TErrorResponse>=>{
 
 
   try {
@@ -32,6 +38,115 @@ const Email_Verification_Server_Action = async(token:string):Promise<TSuccessRes
 
 }
 
+
+Using proper naming conventions in JavaScript, especially for full-stack app development, improves code readability, maintainability, and scalability. Here are the best practices for naming conventions in a full-stack JavaScript application:
+
+---
+
+### 1. General Naming Rules
+- Use camelCase for variables, functions, and object keys (userName, fetchData).
+- Use PascalCase for classes and React components (UserModel, ProductCard).
+- Use UPPER_CASE_SNAKE_CASE for constants (API_URL, MAX_RETRIES).
+- Use kebab-case for file names (user-controller.js, product-card.jsx).
+- Keep names descriptive and consistent (fetchUserData, not getInfo).
+
+---
+
+### 2. Frontend Naming Conventions (React & JavaScript)
+#### Variables & Functions
+const userProfile = { name: "John Doe", age: 30 };
+function fetchUserData(userId) { ... }
+#### React Components
+function UserProfileCard({ user }) { ... }
+export default UserProfileCard;
+#### State Variables (React)
+- Use is or has for boolean values (isLoading, hasError).
+- Use set prefix for state setters (setUserData).
+
+const [isLoading, setIsLoading] = useState(false);
+const [userData, setUserData] = useState(null);
+#### Event Handlers
+- Prefix with handle (handleClick, handleSubmit).
+function handleFormSubmit(event) { ... }
+#### Custom Hooks
+- Prefix with use (useAuth, useFetch).
+function useAuth() { ... }
+---
+
+### 3. Backend Naming Conventions (Node.js, Express, MongoDB)
+#### Routes & Controllers
+- Use plural nouns for REST API routes (/users, /products).
+- Use camelCase for controller functions.
+router.get("/users", getAllUsers);
+router.post("/users", createUser);
+```js
+// controllers/userController.js
+async function getAllUsers(req, res) { ... }
+async function createUser(req, res) { ... }
+#### **Models & Schemas (MongoDB/Mongoose)**
+- Use **PascalCase** for model names and **camelCase** for schema fields.
+js
+const UserSchema = new mongoose.Schema({
+  firstName: String,
+  lastName: String,
+  email: String,
+});
+const User = mongoose.model("User", UserSchema);
+#### **Services & Utilities**
+- Use **camelCase** for helper functions and services.
+js
+// services/authService.js
+async function generateToken(user) { ... }
+
+---
+
+### **4. API Naming Conventions**
+- Use **RESTful verbs** (`GET /users`, `POST /users`).
+- Use **nouns** for resource names (`/orders`, `/products`).
+- Use **kebab-case** in URLs (`/user-profile` instead of `/userProfile`).
+
+http
+GET /users/:id
+POST /users
+PUT /users/:id
+DELETE /users/:id
+
+---
+
+### **5. Database Table & Column Naming (SQL)**
+- Use **snake_case** for table and column names.
+sql
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  first_name VARCHAR(50),
+  last_name VAR6. Constantsl VARCHAR(100)
+);
+
+---
+
+### **6. Constants**
+- Use `UPPER_CASE_SNAKE_CASE` for constants.
+js
+const JWT_SECRET = "your_se7. Folder Structure Naming 3;
+
+---
+
+### **7. Folder Structure Naming**
+- Use **kebab-case** for folders.
+/src
+  /components
+    product-card.jsx
+  /pages
+    home.jsx
+  /services
+    api-service.js
+  /controllers
+    user-controller.js
+`
+
+---
+
+Following these conventions will keep your full-stack JavaScript app structured, readable, and maintainable. Let me know if you need further details!
 
 **Overall Strategy:**
 

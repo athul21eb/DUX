@@ -14,8 +14,6 @@ import { Link } from "next-view-transitions";
 import toast from "react-hot-toast";
 
 export function UserNav() {
-
-
   const { data: session, status } = useSession();
 
   if (status === "loading") {
@@ -31,7 +29,10 @@ export function UserNav() {
 
     try {
       await signOut({ redirect: false }); // Prevents immediate redirection
-      toast.success("Logged out successfully!", { id: toastId, duration: 2000 });
+      toast.success("Logged out successfully!", {
+        id: toastId,
+        duration: 2000,
+      });
     } catch (error) {
       toast.error("Error logging out!", { id: toastId, duration: 3000 });
     }
@@ -41,27 +42,31 @@ export function UserNav() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Avatar className="h-8 w-8 cursor-pointer">
-          <AvatarImage
-            src={session?.user?.image || "/dux.png"}
-            alt="User avatar"
-            onError={(e) => (e.currentTarget.src = "/dux.png")} // Fallback on error
-          />
+          <AvatarImage src={session?.user?.image || ""} alt="User avatar" />
           <AvatarFallback>
             {session.user?.name?.charAt(0) ?? "D"}
           </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">
-              {session.user?.name}
-            </p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {session.user?.email}
-            </p>
+        <DropdownMenuLabel className="p-0 font-normal">
+          <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+            <Avatar className="h-8 w-8 rounded-full">
+              <AvatarImage
+                src={session?.user?.image}
+                alt={session?.user?.name ?? ""}
+              />
+              <AvatarFallback className="rounded-lg">{session?.user?.name ?? ""}</AvatarFallback>
+            </Avatar>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-semibold">
+                {session?.user?.name}
+              </span>
+              <span className="truncate text-xs">{session?.user?.email}</span>
+            </div>
           </div>
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link
@@ -77,7 +82,7 @@ export function UserNav() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>Log out</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleSignOut} className="text-center">Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

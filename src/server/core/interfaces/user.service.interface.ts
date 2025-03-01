@@ -1,4 +1,4 @@
-import { createUserDTO, loginUserDTO } from "../dtos/userDtos";
+import { createUserDTO, loginUserDTO, updateUserDTO } from "../dtos/userDtos";
 import { IUser } from "../entities/user";
 
 export interface IUserService {
@@ -8,4 +8,5 @@ export interface IUserService {
   changeEmailVerification(email:string):Promise<IUser>;
   updateGoogleIdOfUser(id:string,googleId:string):Promise<IUser>;
   changePasswordOfUser(email:string,password:string):Promise<IUser>;
+  updateUserDetails(data:updateUserDTO,image:File|null):Promise<IUser>;
 }

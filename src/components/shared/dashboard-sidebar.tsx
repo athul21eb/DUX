@@ -27,12 +27,17 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { useSession, signOut, getSession } from "next-auth/react";
-
-import DUX from "../ui/Dux";
 import toast from "react-hot-toast";
 import { Link } from "next-view-transitions";
-import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useEffect } from "react";
+import DUX from "../ui/Dux";
 
 type NavItem = {
   title: string;
@@ -70,7 +75,6 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
 
-
   useEffect(() => {
     getSession();
   }, []);
@@ -78,12 +82,11 @@ export default function Sidebar() {
   const handleSignOut = async () => {
     const toastId = toast.loading("Logging out...");
     try {
-      await signOut({redirectTo:"/"});
+      await signOut({ redirectTo: "/" });
       toast.success("Logged out successfully!", {
         id: toastId,
         duration: 2000,
       });
-
     } catch (error) {
       toast.error("Error logging out!", { id: toastId, duration: 3000 });
     }
@@ -102,35 +105,12 @@ export default function Sidebar() {
   }
 
   return (
-    <ShadcnSidebar className=" min-h-screen">
+    <ShadcnSidebar className="min-h-screen">
       <SidebarHeader className="p-4">
         <DUX />
-        {session?.user && (
-          <div className="flex items-center space-x-4 mt-6 p-3 rounded-lg  shadow">
-            <Avatar className="w-12 h-12 border-2 border-primary rounded-full shadow-lg">
-              <AvatarImage
-                src={session.user.image|| "/default-avatar.png"}
-                alt={session.user.name || "User"}
-                className="w-full h-full rounded-full"
-              />
-             <AvatarFallback className="bg-primary text-muted font-semibold uppercase flex items-center justify-center w-full h-full rounded-full">
-  {session.user.name?.charAt(0) || "U"}
-</AvatarFallback>
-
-            </Avatar>
-            <div className="flex flex-col overflow-hidden">
-  <p className="text-sm font-semibold truncate w-32">{session.user.name}</p>
-  <p className="text-xs text-gray-500 dark:text-gray-400 truncate w-32">
-    {session.user.email}
-  </p>
-</div>
-
-          </div>
-        )}
       </SidebarHeader>
 
-      {/* Divider */}
-      <hr className="border-gray-300 dark:border-gray-700 my-4 mx-4" />
+      <hr className="border-primary my-4 mx-4" />
 
       <SidebarContent>
         <SidebarMenu>
@@ -166,22 +146,47 @@ export default function Sidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      {/* Divider */}
-      <hr className="border-gray-300 dark:border-gray-700 my-4 mx-4" />
+      <hr className="border-primary my-4 mx-4" />
 
-      <SidebarFooter className="p-4">
-        {session ? (
-          <Button onClick={handleSignOut} className="w-full">
-            Sign Out
-          </Button>
-        ) : (
-          <Link href="/login" passHref legacyBehavior>
-            <Button asChild className="w-full">
-              <a>Sign In</a>
-            </Button>
-          </Link>
-        )}
-      </SidebarFooter>
+      {/* User Details & Logout at Bottom */}
+      {session?.user && (
+        <SidebarFooter className="p-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center space-x-3 w-full p-2 rounded-lg bg-muted hover:bg-secondary transition">
+              <Avatar className="w-10 h-10">
+                <AvatarImage
+                  src={session.user.image || "/default-avatar.png"}
+                  alt={session.user.name || "User"}
+                  className="w-full h-full rounded-full"
+                />
+                <AvatarFallback className="bg-primary text-white font-semibold uppercase flex items-center justify-center w-full h-full rounded-full">
+                  {session.user.name?.charAt(0) || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col overflow-hidden">
+                <p className="text-sm font-semibold truncate w-32">
+                  {session.user.name}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate w-32">
+                  {session.user.email}
+                </p>
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-48">
+
+              <DropdownMenuItem asChild>
+                <Link href="/">Home Page</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-red-500 cursor-pointer"
+                onClick={handleSignOut}
+              >
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </SidebarFooter>
+      )}
     </ShadcnSidebar>
   );
 }

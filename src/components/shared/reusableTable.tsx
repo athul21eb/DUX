@@ -1,24 +1,85 @@
+"use client";
 
-
-'use client'
-
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { motion } from "framer-motion";
 import { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
-// Reusable DataTable Component
-interface DataTableProps<T> {
+// Define the props interface
+interface ReusableDataTableProps {
   headers: string[];
-  rows: T[];
-  renderRow: (row: T) => ReactNode[];
+  rows: (ReactNode | ReactNode[])[]; // Each row contains multiple columns
+
+  loading?: boolean;
+  className?: string;
+  onClickRow?: (id: string | number) => void;
 }
+
+// Animation variants for rows
+const rowVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (index: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 15,
+      delay: index * 0.05, // Staggered animation effect
+    },
+  }),
+};
 
 const MotionTableRow = motion(TableRow);
 
-export default function ReusableDataTable<T>({ headers, rows, renderRow }: DataTableProps<T>) {
+export default function ReusableTable(props: ReusableDataTableProps) {
+  const { headers, rows, loading, className, onClickRow } = props;
+
+  // Render loading state
+  if (loading) {
+    return (
+      <div className={cn("rounded-md border overflow-x-auto w-full", className)}>
+        <Table>
+          <TableHeader className="bg-muted">
+            <TableRow>
+              {headers.map((header, index) => (
+                <TableHead key={index} className="px-4 py-3 text-left font-medium">
+                  {header}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array(3)
+              .fill(0)
+              .map((_, rowIndex) => (
+                <TableRow key={rowIndex}>
+                  {Array(headers.length)
+                    .fill(0)
+                    .map((_, cellIndex) => (
+                      <TableCell key={cellIndex} className="px-4 py-3">
+                        <div className="h-4 bg-muted animate-pulse rounded" />
+                      </TableCell>
+                    ))}
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  }
+
   return (
-    <div className="rounded-md border overflow-x-auto w-full">
+    <div className={cn("rounded-md border overflow-x-auto w-full", className)}>
       <Table>
+        {/* Table Header */}
         <TableHeader className="bg-muted">
           <TableRow>
             {headers.map((header, index) => (
@@ -28,19 +89,30 @@ export default function ReusableDataTable<T>({ headers, rows, renderRow }: DataT
             ))}
           </TableRow>
         </TableHeader>
+
+        {/* Table Body */}
         <TableBody>
           {rows.length > 0 ? (
-            rows.map((row, rowIndex) => (
+            rows.map((rowData, rowIndex) => (
               <MotionTableRow
                 key={rowIndex}
-                whileHover={{ backgroundColor: "rgba(0,0,0,0.02)" }}
-                className="transition-colors"
+                initial="hidden"
+                animate="visible"
+                variants={rowVariants}
+                custom={rowIndex}
+
+                className="transition-colors cursor-pointer hover:bg-accent/10"
+                onClick={() => onClickRow?.(rowIndex)}
               >
-                {renderRow(row).map((cell, cellIndex) => (
-                  <TableCell key={cellIndex} className="px-4 py-3 text-sm">
-                    {cell}
-                  </TableCell>
-                ))}
+                {Array.isArray(rowData) ? (
+                  rowData.map((cell, cellIndex) => (
+                    <TableCell key={cellIndex} className="px-4 py-3">
+                      {cell}
+                    </TableCell>
+                  ))
+                ) : (
+                  <TableCell className="px-4 py-3">{rowData}</TableCell>
+                )}
               </MotionTableRow>
             ))
           ) : (
