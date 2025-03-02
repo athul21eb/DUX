@@ -51,7 +51,9 @@ export class PrismaUserRepository implements IUserRepository {
   }
 
   async getAllUsers(): Promise<IUser[]> {
-    return await prisma.user.findMany();
+    return await prisma.user.findMany({where:{
+      role:"user"
+    }});
   }
 
   async changeBlockStatus(id: string,status:boolean): Promise<boolean> {
@@ -69,6 +71,9 @@ export class PrismaUserRepository implements IUserRepository {
   async isEmailTaken(email: string): Promise<boolean> {
     const user = await prisma.user.findUnique({ where: { email } });
     return !!user;
+  }
+  async totalCount(): Promise<number> {
+    return await prisma.user.count();
   }
 }
 

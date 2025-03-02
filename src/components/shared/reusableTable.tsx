@@ -37,7 +37,7 @@ const rowVariants = {
   }),
 };
 
-const MotionTableRow = motion(TableRow);
+const MotionTableRow = motion.create(TableRow);
 
 export default function ReusableTable(props: ReusableDataTableProps) {
   const { headers, rows, loading, className, onClickRow } = props;

@@ -9,7 +9,7 @@ console.log("rendered");
   const initialData = await Get_All_Skills_With_Pagination_Server_Action(1, itemsPerPage); // Fetching the first page of skills
   if (!initialData.success) return <div>Failed to Fetch Skills {initialData.message}</div>;
 
-  console.log(initialData)
+  
   return (
     <div>
       {initialData.data && (

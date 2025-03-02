@@ -10,7 +10,7 @@ import {
   TErrorResponse,
   TSuccessResponse,
 } from "@/utils/serverActionResponses/serverActionResponses";
-import { skillFormType, skillSchema } from "@/utils/validator/skillform";
+import {  skillSchema } from "@/utils/validator/skillform";
 
 
 

@@ -31,7 +31,7 @@ export default auth(async (req: NextRequest) => {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const role = token?.role ??"undefined";
   const isBlocked :boolean = token?.isBlocked as boolean;
-  console.log(token)
+
 
   const isAuthenticated = !!token;
   const { pathname } = req.nextUrl;
@@ -46,9 +46,9 @@ export default auth(async (req: NextRequest) => {
     return NextResponse.redirect(new URL("/blocked", req.nextUrl));
   }
 
-  if (pathname === "/register-as-mentor" && role !== "user") {
-    return NextResponse.redirect(new URL("/login", req.nextUrl));
-  }
+  // if (pathname === "/register-as-mentor" && role !== "user") {
+  //   return NextResponse.redirect(new URL("/login", req.nextUrl));
+  // }
 
   if (!hasAccess(pathname, role)) {
     return NextResponse.redirect(new URL("/login", req.nextUrl));

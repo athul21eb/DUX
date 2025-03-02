@@ -1,4 +1,4 @@
-
+'use client'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Form } from "../ui/form";
 import { Button } from "../ui/button";

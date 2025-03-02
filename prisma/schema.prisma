@@ -80,13 +80,20 @@ model Mentor {
   profile        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   skills      MentorSkill[]  // Many-to-Many relation through a junction table
   documents   String[]  // Array of file paths or URLs for uploaded documents
-  aboutMe     String?  // Short description or bio
+  aboutMe     String? // Short description or bio
+  expertise    String
   experiences Experience[]  // Array of experiences, could be a JSON object or structured data
   educations  Education[]  // Array of educational details, could be a JSON object or structured data
   languages   String[]  // Array of languages spoken
-  verified    Boolean  @default(false)
+  hourlyRate  Int
+  verified    VerificationStatus  @default(pending)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+enum VerificationStatus {
+  pending
+  verified
+  rejected
 }
 
 model Experience {

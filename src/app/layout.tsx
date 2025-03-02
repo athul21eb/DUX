@@ -36,6 +36,12 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  icons: {
+    icon: [{ url: "/dux.png", type: "image/png" }], // Explicit type declaration
+    shortcut: [{ url: "/dux.png", type: "image/png" }],
+    apple: [{ url: "/dux.png", type: "image/png" }],
+  },
+
 }
 
 export default  function RootLayout({

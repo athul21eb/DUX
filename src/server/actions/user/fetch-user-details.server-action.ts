@@ -5,11 +5,11 @@ import { ValidationError } from "@/server/core/errors/errors";
 import { userService } from "@/server/services/user.service";
 import { ErrorResponse, SuccessResponse, TErrorResponse, TSuccessResponse } from "@/utils/serverActionResponses/serverActionResponses"
 
-interface Presenter extends UserProfileDTO{}
+
 
 export const Fetch_User_Details_By_Email_Server_Action = async (
   userEmail: string
-): Promise<TSuccessResponse<Presenter> | TErrorResponse> => {
+): Promise<TSuccessResponse<UserProfileDTO> | TErrorResponse> => {
   try {
     if (!userEmail) {
       throw new ValidationError("Invalid user email");
@@ -21,7 +21,7 @@ export const Fetch_User_Details_By_Email_Server_Action = async (
       throw new ValidationError("User not found");
     }
 
-    const presenter: Presenter = {
+    const presenter: UserProfileDTO = {
       name: fetchedUser.name ?? "",
       email: fetchedUser.email ?? "",
       phone: fetchedUser.phone ?? undefined,

@@ -1,8 +1,8 @@
-import React from 'react'
+
 
 function loading() {
   return (
-    <div>loading  the data </div>
+    <div className="w-full h-svh flex justify-center items-center">loading  the  data </div>
   )
 }
 

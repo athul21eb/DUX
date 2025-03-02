@@ -1,3 +1,5 @@
+import { IUser } from "../entities/user";
+
 export interface createUserDTO {
   name: string;
   email: string;
@@ -16,7 +18,14 @@ export interface updateUserDTO {
 
 
 }
+export interface getAllUsersDTO{
 
+  users:IUser[]
+  totalPages:number
+
+  totalCount:number
+
+}
 export interface UserProfileDTO {
   name?: string; // Optional name field
   email: string;

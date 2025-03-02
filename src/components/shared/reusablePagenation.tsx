@@ -1,4 +1,4 @@
-
+'use client'
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious, PaginationLink, PaginationEllipsis } from "../ui/pagination";
 import { Loader2 } from "lucide-react";
 

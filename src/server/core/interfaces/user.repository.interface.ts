@@ -8,7 +8,8 @@ export interface IUserRepository {
   getUserByGoogleId(googleId: string): Promise<IUser | null>;
   updateUser(id: string, userData: Partial<IUser>): Promise<IUser | null>;
   deleteUser(id: string): Promise<boolean>;
-  getAllUsers(): Promise<IUser[]>;
+  getAllUsers(options:object): Promise<IUser[]>;
   changeBlockStatus(id: string,status:boolean): Promise<boolean>;
   isEmailTaken(email: string): Promise<boolean> ;
+  totalCount():Promise<number>;
 }

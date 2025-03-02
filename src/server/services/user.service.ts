@@ -1,5 +1,6 @@
 import {
   createUserDTO,
+  getAllUsersDTO,
   loginUserDTO,
   updateUserDTO,
 } from "../core/dtos/userDtos";
@@ -11,7 +12,7 @@ import { IUserService } from "../core/interfaces/user.service.interface";
 import { compare, hash } from "bcrypt-ts";
 import { prismaRepoInstance } from "../repositories/prisma.user.repository";
 import { signIn } from "@/lib/auth/auth";
-import { AuthError } from "next-auth";
+
 import { uploadImage } from "@/utils/cloudinary/cloudinary";
 
 export class UserService implements IUserService {
@@ -222,7 +223,10 @@ export class UserService implements IUserService {
 
   //// --------------------update user profile Details
 
-  async updateUserDetails(data: updateUserDTO, image: File|null): Promise<IUser> {
+  async updateUserDetails(
+    data: updateUserDTO,
+    image: File | null
+  ): Promise<IUser> {
     try {
       const { name, email, phone, gender, dob } = data;
       const user = await this.userRepository.getUserByEmail(email);
@@ -265,6 +269,61 @@ export class UserService implements IUserService {
       if (error instanceof ValidationError) throw error;
       console.error("Error in user service update user func :", error);
       throw new Error("failed to do update user");
+    }
+  }
+
+  ////--------------getAllUsersWithPagination -------------------
+
+  async getAllUsersWithPagination(
+    skip: number,
+    limit: number
+  ): Promise<getAllUsersDTO> {
+    try {
+      const users = await this.userRepository.getAllUsers({
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      });
+      const totalCount = await this.userRepository.totalCount();
+
+      const data = {
+        users,
+        totalPages: Math.ceil(totalCount / limit),
+        totalCount,
+      };
+      return data;
+    } catch (error) {
+      if (error instanceof ValidationError) throw error;
+      console.error("Error in skill service get user func :", error);
+      throw new Error("failed to fetch  get users");
+    }
+  }
+
+  ////--------------changeIsBlockedStatus -------------------
+
+  async changeIsBlockedStatus(id: string, status: boolean): Promise<boolean> {
+    try {
+      if (!id || typeof status !== "boolean") {
+        throw new ValidationError("invalid data to change isBlocked status");
+      }
+
+      const user = await this.userRepository.getUserById(id);
+      if (!user) {
+        throw new ValidationError("user does not exist");
+      }
+
+      const changedOrNot = await this.userRepository.changeBlockStatus(user.id, status);
+
+      if (!changedOrNot) {
+        throw new ValidationError(
+          "failed to  change status of isBlocked of user"
+        );
+      }
+      return changedOrNot;
+    } catch (error) {
+      if (error instanceof ValidationError) throw error;
+      console.error("Error in skill service get user func :", error);
+      throw new Error("failed to fetch  get users");
     }
   }
 }
