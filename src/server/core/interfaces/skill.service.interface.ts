@@ -9,4 +9,5 @@ export interface ISkillService {
   getAllSkillsWithPagination(skip:number,limit:number): Promise<getAllSkillsDTO>;
   updateSkill(data:updateSkillDTO): Promise<Skill>;
   deleteSkill(id: string): Promise<boolean>;
+  getAllSkills():Promise<Skill[]>;
 }

@@ -1,32 +1,32 @@
-import ApprovalClient from '@/components/layouts/approval';
-import { getMentorApprovalById } from '@/lib/actions/admin/approvals/approvalsAction';
+import { ApprovalClient } from "@/components/layouts/admin/admin-mentor-aprrovals-with-details";
+import { Get_Mentor_Details_By_Id_Server_Action } from "@/server/actions/admin/mentorsManagement/get-mentor-by-Id.server-action";
 
 
-// Server-side component to fetch mentor data
-export default async function MentorApprovalDetailPage({ params }: any) {
-  const { mentorId } = params;
+interface MentorApprovalParams {
+  params: {
+    mentorId: string;
+  };
+}
 
-  // Fetch mentor approval details by ID
-  const approval = await getMentorApprovalById(mentorId);
+export default async function MentorApprovalDetailPage({ params }: MentorApprovalParams) {
+  const { mentorId } = await params;
+  const approval = await Get_Mentor_Details_By_Id_Server_Action(mentorId);
 
-  if (!approval?.success) {
-    return <div>Error fetching mentor approval.</div>;
+  if (!approval?.success||!approval.data) {
+
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-red-50 p-4 rounded-md text-red-800">
+          Error fetching mentor approval. Please try again.
+        </div>
+      </div>
+    );
   }
-console.log(approval?.data)
-  const mentor = approval?.data;
-
-  // return <div>hi</div>
-
-  if (!mentor) {
-    return <div>Mentor approval not found.</div>;
-  }
-
+  
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-4">Mentor Approval Details</h1>
-    <ApprovalClient mentor={mentor} mentorId={mentorId}/>
+      <h1 className="text-2xl font-bold mb-6">Mentor Approval Details</h1>
+      <ApprovalClient mentor={approval.data} mentorId={mentorId} />
     </div>
   );
 }
-
-

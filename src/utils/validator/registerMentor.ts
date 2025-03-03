@@ -1,70 +1,83 @@
 import { z } from "zod";
 
-// Zod schema for skill
-const skillSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1, "Skill name is required"),
-  description: z.string().min(1, "Description is required"),
-  createdAt: z.date(), // Optional field
-  updatedAt: z.date(), // Optional field
-});
+export const RegisterMentorFormSchema = z.object({
+  name: z.string().trim().min(2, "Name must be at least 2 characters"),
+  email: z.string().trim().email("Please enter a valid email"),
+  phone: z.string().trim().regex(/^\d{10}$/, "Phone number must be 10 digits"),
 
-// Zod schema for experience
-const experienceSchema = z
-  .object({
-    role: z.string().min(1, "Role is required"),
-    company: z.string().min(1, "Company is required"),
-    startDate: z.date({ required_error: "Start date is required" }),
-    endDate: z.date().nullable().optional(),
-    description: z.string().min(1, "Description is required"),
-  })
-  .refine(
-    (data) => !data.endDate || data.startDate <= data.endDate,
-    {
-      message: "End date must be after start date",
-      path: ["endDate"],
-    }
-  );
+  dob: z.date({
+    required_error: "Date of birth is required",
+  }).refine((date) => {
+    const today = new Date();
+    const age = today.getFullYear() - date.getFullYear();
+    return age >= 18;
+  }, "You must be at least 18 years old"),
 
-// Zod schema for education
-const educationSchema = z
-  .object({
-    degree: z.string().min(1, "Degree is required"),
-    institution: z.string().min(1, "Institution is required"),
-    startDate: z.date({ required_error: "Start date is required" }),
-    endDate: z.date().nullable().optional(),
-    description: z.string().min(1, "Description is required"),
-  })
-  .refine(
-    (data) => !data.endDate || data.startDate <= data.endDate,
-    {
-      message: "End date must be after start date",
-      path: ["endDate"],
-    }
-  );
+  gender: z.enum(["male", "female", "other", "prefer-not-to-say"], {
+    required_error: "Please select a gender",
+  }),
 
-// Form schema
-const RegisterMentorformSchema = z.object({
-  userId:z.string().optional(),
-  email: z.string().email("Invalid email format"),
-  name: z.string().min(1, "Name is required"),
-  phone: z
-    .string()
-    .optional()
-    .refine(
-      (value) => !value || /^[0-9]{10}$/.test(value),
-      "Phone number must be exactly 10 digits"
-    ),
-  skills: z.array(skillSchema).min(1, "At least one skill is required"),
+  hourlyRate: z
+  .string()
+  .trim()
+  .min(1, "Hourly rate is required")
+  .transform((val) => Number(val))
+  .refine((val) => val >= 500, {
+    message: "Hourly rate must be at least ₹500",
+  }).transform(val=>String(val)),
 
-  aboutMe: z.string().min(20, "About me should be at least 20 characters"),
+
+  expertise: z.string().trim().min(2, "Please select your expertise"),
+
+  skills: z
+    .array(
+      z.object({
+        id: z.string().trim(),
+        name: z.string().trim(),
+        description: z.string().trim(),
+      })
+    )
+    .min(1, "Please select at least one skill"),
+
+  aboutMe: z.string().trim().min(10, "Please provide information about yourself"),
+
   experiences: z
-    .array(experienceSchema)
-    .min(1, "At least one experience is required"),
+    .array(
+      z.object({
+        role: z.string().trim().min(1, "Role is required"),
+        company: z.string().trim().min(1, "Company is required"),
+        startDate: z.date(),
+        endDate: z.date().nullable(),
+        description: z.string().trim(),
+      })
+    )
+    .refine(
+      (experiences) =>
+        experiences.every(
+          (exp) => !exp.endDate || exp.endDate >= exp.startDate
+        ),
+      "End date must be after start date"
+    ),
+
   educations: z
-    .array(educationSchema)
-    .min(1, "At least one education is required"),
-  languages: z.array(z.string()).min(1, "At least one language is required"),
+    .array(
+      z.object({
+        degree: z.string().trim().min(1, "Degree is required"),
+        institution: z.string().trim().min(1, "Institution is required"),
+        startDate: z.date(),
+        endDate: z.date().nullable(),
+        description: z.string().trim(),
+      })
+    )
+    .refine(
+      (educations) =>
+        educations.every(
+          (edu) => !edu.endDate || edu.endDate >= edu.startDate
+        ),
+      "End date must be after start date"
+    ),
+
+  languages: z.array(z.string().trim()).min(1, "Please add at least one language"),
 });
 
-export { RegisterMentorformSchema };
+export type RegisterMentorFormType = z.infer<typeof RegisterMentorFormSchema>;

@@ -6,25 +6,33 @@ cloudinary.v2.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export async function uploadImage(file: File): Promise<string | null> {
+export default  async function uploadFile(file: File): Promise<string | null> {
   try {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "your_upload_preset");
 
-    const response = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
-      method: "POST",
-      body: formData,
-    });
+    // Determine resource type: "image" for images, "raw" for documents
+    const isImage = file.type.startsWith("image/");
+    const resourceType = isImage ? "image" : "raw";
+
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
 
     if (!response.ok) {
-      throw new Error("Image upload failed");
+      const errorData = await response.json();
+      throw new Error(`Upload failed: ${errorData.error?.message || "Unknown error"}`);
     }
 
     const data = await response.json();
-    return data.secure_url; // Returns the uploaded image URL
+    return data.secure_url; // Returns the public URL
   } catch (error) {
     console.error("Cloudinary Upload Error:", error);
-    throw Error('eroor in cloundinary')
+    return null;
   }
 }

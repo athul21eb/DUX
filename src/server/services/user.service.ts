@@ -12,8 +12,8 @@ import { IUserService } from "../core/interfaces/user.service.interface";
 import { compare, hash } from "bcrypt-ts";
 import { prismaRepoInstance } from "../repositories/prisma.user.repository";
 import { signIn } from "@/lib/auth/auth";
+import uploadFile from "@/utils/cloudinary/cloudinary";
 
-import { uploadImage } from "@/utils/cloudinary/cloudinary";
 
 export class UserService implements IUserService {
   constructor(private userRepository: IUserRepository) {}
@@ -25,28 +25,25 @@ export class UserService implements IUserService {
 
       // console.log(userExists, "<====user \n");
 
-      if (
-        userExists &&
-        userExists.email &&
-        (userExists.googleId || !userExists.password)
-      ) {
-        throw new ValidationError(
-          "Email already register via  Google . please try with another email"
-        );
-      }
+      if (userExists) {
+        if (userExists.googleId || !userExists.password) {
+          throw new ValidationError(
+            "Email is already registered via Google SignIn. Please try with another email."
+          );
+        }
 
-      if (
-        userExists &&
-        userExists.email &&
-        userExists.password &&
-        !userExists.emailVerified
-      ) {
-        throw new ValidationError(
-          "Email already verification sended . Please confirm your email address"
-        );
+        if (!userExists.emailVerified) {
+          throw new ValidationError("Email is not verified yet. check the mailBox");
+        }
+
+        throw new ValidationError("Email is already taken. Please use another email.");
       }
 
       const hashedPassword = await hash(data.password, 10);
+      if(!hashedPassword){
+        throw new ValidationError("failed to register user due to password  hashing problem");
+
+      }
 
       return await this.userRepository.createUser({
         ...data,
@@ -237,7 +234,7 @@ export class UserService implements IUserService {
       let imageUrl = user.image;
       if (image) {
         try {
-          imageUrl = await uploadImage(image);
+          imageUrl = await uploadFile(image);
         } catch (error) {
           console.error("failed to upload image", error);
           throw new ValidationError("failed to upload the image");

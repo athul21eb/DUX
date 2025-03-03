@@ -104,6 +104,20 @@ export class SkillService implements ISkillService {
       throw new Error("failed to   delete skill");
     }
   }
+  async getAllSkills():Promise<Skill[]>{
+
+    try {
+
+
+      return await this.skillRepository.findAll({});
+
+
+    } catch (error) {
+      if (error instanceof ValidationError) throw error;
+      console.error("Error in skill service get all skills func :", error);
+      throw new Error("failed to   get all skill");
+    }
+  }
 }
 
 export const skillService = new SkillService(prismaSkillRepositoryInstance);

@@ -4,6 +4,14 @@ export interface createUserDTO {
   name: string;
   email: string;
   password: string;
+  image?:string;
+  phone?:string;
+  dob?:string;
+  gender?:string;
+  role?:string
+
+
+
 }
 export type Gender = "Male" | "Female" | "Other" | undefined;
 

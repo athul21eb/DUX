@@ -7,8 +7,8 @@ import { Link } from "next-view-transitions";
 
 export default async function MentorsPage() {
 
-   const result = await getAllUsersWithPagination(1,5);
-   console.log(result);
+  //  const result = await getAllUsersWithPagination(1,5);
+  //  console.log(result);
 
 
   return (

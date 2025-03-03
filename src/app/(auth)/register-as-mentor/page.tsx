@@ -1,22 +1,18 @@
 import MentorProfileForm from '@/components/forms/registerAsMentorForm'
-import { auth } from '@/lib/auth/auth';
-import { skillService } from '@/lib/db/skills'
-import { getUserByIdConnectMentor } from '@/lib/db/user';
-import { Skill } from '@/types/skills';
-import { redirect } from 'next/navigation';
+
+import { Get_All_Skills_For_Register_As_Mentor_Form_Server_Action } from '@/server/actions/auth/registerAsMentor/get-all-skills.server-action';
+
 
 
 async function RegisterAsMentor() {
-  const skills: Skill[] = (await skillService.getAllSkills()) ?? [];
+  const res = await Get_All_Skills_For_Register_As_Mentor_Form_Server_Action()
 
-  const session = await auth();
+  if (!res.success||!res.data) return <div>Failed to Fetch Skills {res.message}</div>;
 
-   const  user = await getUserByIdConnectMentor(session?.user?.id??"")
- if(user?.mentorProfile?.userId) return redirect('/')
 
   return (
-    <div>
-      <MentorProfileForm availableSkills={skills} />
+    <div className='w-full'>
+      <MentorProfileForm availableSkills={res.data} />
     </div>
   )
 }

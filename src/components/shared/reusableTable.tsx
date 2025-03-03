@@ -19,7 +19,7 @@ interface ReusableDataTableProps {
 
   loading?: boolean;
   className?: string;
-  onClickRow?: (id: string | number) => void;
+  onClickRow?: (index:number) => void;
 }
 
 // Animation variants for rows

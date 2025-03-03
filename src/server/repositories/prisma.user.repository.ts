@@ -2,11 +2,17 @@ import { prisma } from "@/lib/db/database";
 import { IUserRepository } from "../core/interfaces/user.repository.interface";
 import { IUser } from "../core/entities/user";
 import { createUserDTO } from "../core/dtos/userDtos";
+import { Role } from "@prisma/client";
 
 export class PrismaUserRepository implements IUserRepository {
   async createUser(user: createUserDTO): Promise<IUser> {
+
+
     return await prisma.user.create({
-      data: user,
+      data: {
+        ...user,
+        role: user.role as Role, 
+      },
     });
   }
 
