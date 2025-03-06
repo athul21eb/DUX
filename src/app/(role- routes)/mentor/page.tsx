@@ -1,9 +1,9 @@
 
 function MentorDashboard() {
 
-  
+
   return (
-    <div>MentorDashboard under maintain</div>
+    <div>Mentor Dashboard under maintainance</div>
   )
 }
 

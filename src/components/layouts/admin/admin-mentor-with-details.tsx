@@ -1,25 +1,45 @@
 "use client";
 
 import { useState } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
+
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion";
 
-import { ChevronLeft, ChevronRight, Download, ExternalLink, Calendar, Briefcase, GraduationCap, Languages, DollarSign, FileText, IndianRupee } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  ExternalLink,
+  Calendar,
+  Briefcase,
+  GraduationCap,
+  Languages,
+  DollarSign,
+  FileText,
+  IndianRupee,
+} from "lucide-react";
 import { MentorsWithRelations } from "@/server/core/dtos/mentorDtos";
 import toast from "react-hot-toast";
+import { Admin_Approve_Or_Reject_Mentor_Approval_Server_Action } from "@/server/actions/admin/mentorsManagement/approve-or-reject-mentor-approval.server-action";
+import { useTransitionRouter } from "next-view-transitions";
 
-// Set up PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 interface ApprovalClientProps {
   mentor: MentorsWithRelations;
   mentorId: string;
+  approvalOrNot?: boolean;
 }
 
 const formatDate = (date: Date | null | undefined) => {
@@ -30,34 +50,40 @@ const formatDate = (date: Date | null | undefined) => {
   });
 };
 
-
-
-export function ApprovalClient({ mentor, mentorId }: ApprovalClientProps) {
+export function MentorDetailsClient({
+  mentor,
+  mentorId,
+  approvalOrNot = true,
+}: ApprovalClientProps) {
   const [currentDocIndex, setCurrentDocIndex] = useState(0);
   const [numPages, setNumPages] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleApproveOrReject = async () => {
+  const router = useTransitionRouter();
+  const handleApproveOrReject = async (status: string) => {
     setIsLoading(true);
     try {
+      const res = await Admin_Approve_Or_Reject_Mentor_Approval_Server_Action(
+        mentorId,
+        status
+      );
 
+      if (!res.success) {
+        toast.error(res.message);
 
-      // const result = await approveMentorOrReject(mentorId,status);
-      // if (result.success) {
-        toast.success("approved");
-      // }
+      } else {
+        toast.success(res.message);
+        router.replace("/admin/mentors")
+      }
     } catch (error) {
-      toast.error("failed to status chage mentor")
+      toast.error("Failed to change mentor status");
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Ensures loading state is reset no matter what
     }
   };
 
 
 
-  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-    setNumPages(numPages);
-  };
 
   return (
     <motion.div
@@ -72,17 +98,31 @@ export function ApprovalClient({ mentor, mentorId }: ApprovalClientProps) {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={mentor.profile?.image || ""} alt={mentor.profile?.name || "Mentor"} />
-                <AvatarFallback>{mentor.profile?.name?.substring(0, 2) || "MN"}</AvatarFallback>
+                <AvatarImage
+                  src={mentor.profile?.image || ""}
+                  alt={mentor.profile?.name || "Mentor"}
+                />
+                <AvatarFallback>
+                  {mentor.profile?.name?.substring(0, 2) || "MN"}
+                </AvatarFallback>
               </Avatar>
               <div>
-                <CardTitle className="text-2xl">{mentor.profile?.name}</CardTitle>
-                <CardDescription className="text-lg">{mentor.expertise}</CardDescription>
+                <CardTitle className="text-2xl">
+                  {mentor.profile?.name}
+                </CardTitle>
+                <CardDescription className="text-lg">
+                  {mentor.expertise}
+                </CardDescription>
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge variant={
-                    mentor.verified === "verified" ? "default" :
-                    mentor.verified === "rejected" ? "destructive" : "secondary"
-                  }>
+                  <Badge
+                    variant={
+                      mentor.verified === "verified"
+                        ? "default"
+                        : mentor.verified === "rejected"
+                        ? "destructive"
+                        : "secondary"
+                    }
+                  >
                     {mentor.verified?.toUpperCase()}
                   </Badge>
                   <Badge variant="outline" className="flex items-center gap-1">
@@ -91,22 +131,24 @@ export function ApprovalClient({ mentor, mentorId }: ApprovalClientProps) {
                 </div>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button
-                variant="default"
-                onClick={handleApproveOrReject}
-                disabled={isLoading || mentor.verified === "verified"}
-              >
-                Approve
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={handleApproveOrReject}
-                disabled={isLoading || mentor.verified === "rejected"}
-              >
-                Reject
-              </Button>
-            </div>
+            {approvalOrNot && (
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button
+                  variant="default"
+                  onClick={() => handleApproveOrReject("verified")}
+                  disabled={isLoading || mentor.verified === "verified"}
+                >
+                  Approve
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => handleApproveOrReject("rejected")}
+                  disabled={isLoading || mentor.verified === "rejected"}
+                >
+                  Reject
+                </Button>
+              </div>
+            )}
           </div>
         </CardHeader>
       </Card>
@@ -147,11 +189,20 @@ export function ApprovalClient({ mentor, mentorId }: ApprovalClientProps) {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Gender</p>
-                  <p>{mentor.profile?.gender ? mentor.profile.gender.charAt(0).toUpperCase() + mentor.profile.gender.slice(1) : "Not provided"}</p>
+                  <p>
+                    {mentor.profile?.gender
+                      ? mentor.profile.gender.charAt(0).toUpperCase() +
+                        mentor.profile.gender.slice(1)
+                      : "Not provided"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Date of Birth</p>
-                  <p>{mentor.profile?.dob ? formatDate(mentor.profile.dob) : "Not provided"}</p>
+                  <p>
+                    {mentor.profile?.dob
+                      ? formatDate(mentor.profile.dob)
+                      : "Not provided"}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -168,7 +219,11 @@ export function ApprovalClient({ mentor, mentorId }: ApprovalClientProps) {
                   <div className="flex flex-wrap gap-2">
                     {mentor.skills.length > 0 ? (
                       mentor.skills.map((skill) => (
-                        <Badge key={skill.id} variant="secondary" className="text-sm py-1">
+                        <Badge
+                          key={skill.id}
+                          variant="secondary"
+                          className="text-sm py-1"
+                        >
                           {skill.name}
                         </Badge>
                       ))
@@ -187,12 +242,18 @@ export function ApprovalClient({ mentor, mentorId }: ApprovalClientProps) {
                   <div className="flex flex-wrap gap-2">
                     {mentor.languages.length > 0 ? (
                       mentor.languages.map((language, index) => (
-                        <Badge key={index} variant="outline" className="text-sm py-1 capitalize">
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          className="text-sm py-1 capitalize"
+                        >
                           {language}
                         </Badge>
                       ))
                     ) : (
-                      <p className="text-muted-foreground">No languages listed</p>
+                      <p className="text-muted-foreground">
+                        No languages listed
+                      </p>
                     )}
                   </div>
                 </div>
@@ -212,7 +273,7 @@ export function ApprovalClient({ mentor, mentorId }: ApprovalClientProps) {
             <CardContent>
               {mentor.experiences.length > 0 ? (
                 <div className="space-y-6">
-                  {mentor.experiences.map((exp,index) => (
+                  {mentor.experiences.map((exp, index) => (
                     <motion.div
                       key={index}
                       initial={{ opacity: 0 }}
@@ -231,7 +292,9 @@ export function ApprovalClient({ mentor, mentorId }: ApprovalClientProps) {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground">No experience information provided.</p>
+                <p className="text-muted-foreground">
+                  No experience information provided.
+                </p>
               )}
             </CardContent>
           </Card>
@@ -248,7 +311,7 @@ export function ApprovalClient({ mentor, mentorId }: ApprovalClientProps) {
             <CardContent>
               {mentor.educations.length > 0 ? (
                 <div className="space-y-6">
-                  {mentor.educations.map((edu,index) => (
+                  {mentor.educations.map((edu, index) => (
                     <motion.div
                       key={index}
                       initial={{ opacity: 0 }}
@@ -267,7 +330,9 @@ export function ApprovalClient({ mentor, mentorId }: ApprovalClientProps) {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground">No education information provided.</p>
+                <p className="text-muted-foreground">
+                  No education information provided.
+                </p>
               )}
             </CardContent>
           </Card>
@@ -289,13 +354,16 @@ export function ApprovalClient({ mentor, mentorId }: ApprovalClientProps) {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <p className="font-medium">
-                      Document {currentDocIndex + 1} of {mentor.documents.length}
+                      Document {currentDocIndex + 1} of{" "}
+                      {mentor.documents.length}
                     </p>
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setCurrentDocIndex((prev) => Math.max(0, prev - 1))}
+                        onClick={() =>
+                          setCurrentDocIndex((prev) => Math.max(0, prev - 1))
+                        }
                         disabled={currentDocIndex === 0}
                       >
                         <ChevronLeft className="h-4 w-4" />
@@ -304,18 +372,24 @@ export function ApprovalClient({ mentor, mentorId }: ApprovalClientProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(mentor.documents[currentDocIndex], '_blank')}
+                        onClick={() =>
+                          window.open(
+                            mentor.documents[currentDocIndex],
+                            "_blank"
+                          )
+                        }
                       >
                         <ExternalLink className="h-4 w-4 mr-1" />
                         View
                       </Button>
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                      >
-                        <a href={mentor.documents[currentDocIndex]} download target="_blank" rel="noreferrer">
+                      <Button variant="outline" size="sm" asChild>
+                        <a
+                          href={mentor.documents[currentDocIndex]}
+                          download
+                          target="_blank"
+                          rel="noreferrer"
+                        >
                           <Download className="h-4 w-4 mr-1" />
                           Download
                         </a>
@@ -324,42 +398,27 @@ export function ApprovalClient({ mentor, mentorId }: ApprovalClientProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setCurrentDocIndex((prev) => Math.min(mentor.documents.length - 1, prev + 1))}
-                        disabled={currentDocIndex === mentor.documents.length - 1}
+                        onClick={() =>
+                          setCurrentDocIndex((prev) =>
+                            Math.min(mentor.documents.length - 1, prev + 1)
+                          )
+                        }
+                        disabled={
+                          currentDocIndex === mentor.documents.length - 1
+                        }
                       >
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
 
-                  <div className="border rounded-lg overflow-hidden bg-muted/30">
-                    <Document
-                      file={mentor.documents[currentDocIndex]}
-                      onLoadSuccess={onDocumentLoadSuccess}
-                      loading={
-                        <div className="h-96 flex items-center justify-center">
-                          <p>Loading document...</p>
-                        </div>
-                      }
-                      error={
-                        <div className="h-96 flex items-center justify-center">
-                          <p>Failed to load PDF. Try downloading instead.</p>
-                        </div>
-                      }
-                    >
-                      <Page
-                        pageNumber={1}
-                        width={700}
-                        className="max-w-full mx-auto"
-                        renderTextLayer={false}
-                        renderAnnotationLayer={false}
-                      />
-                    </Document>
-                    {numPages && numPages > 1 && (
-                      <div className="text-center p-2 bg-muted/50">
-                        <p>This document has {numPages} pages. View all pages by opening the PDF.</p>
-                      </div>
-                    )}
+                  <div className="border rounded-lg overflow-hidden bg-muted/30 p-4">
+                    <iframe
+                      src={mentor.documents[currentDocIndex]}
+                      width="100%"
+                      height="500px"
+                      className="border rounded-lg"
+                    ></iframe>
                   </div>
                 </div>
               ) : (

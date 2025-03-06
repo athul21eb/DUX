@@ -3,6 +3,7 @@ import {
   createMentorDTO,
   MentorReturnDTO,
   MentorsWithRelations,
+  updateMentorDTO,
 } from "../core/dtos/mentorDtos";
 import { IMentorRepository } from "../core/interfaces/mentor.repository.interface";
 import { ValidationError } from "../core/errors/errors";
@@ -48,8 +49,8 @@ export class PrismaMentorRepositoryImplementation implements IMentorRepository {
               mentorId: mentor.id,
               degree: edu.degree,
               institution: edu.institution,
-              startDate: edu.startDate.toISOString(),
-              endDate: edu.endDate ? edu.endDate.toISOString() : "", // Now null is valid
+              startDate: new Date(edu.startDate),
+              endDate: edu.endDate ? new Date(edu.endDate) : null, // Now null is valid
               description: edu.description,
             })),
           });
@@ -102,6 +103,16 @@ export class PrismaMentorRepositoryImplementation implements IMentorRepository {
         ...mentor,
         skills: mentor.skills.map((ms) => ms.skill), // Convert MentorSkill[] to Skill[]
       };
+    });
+  }
+
+  async updateMentor(id:string,data:Partial<updateMentorDTO>):Promise<Omit<MentorsWithRelations,"skills">>{
+
+
+    return await prisma.mentor.update({
+      where: { id },
+      data:data,
+      include:{profile:true,educations:true,experiences:true}
     });
   }
 }

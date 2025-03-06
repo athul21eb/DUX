@@ -1,7 +1,7 @@
 
 // import { EducationDTO, EducationReturnDTO, ExperienceDTO, ExperienceReturnDTO, MentorDTO, MentorReturnDTO, MentorSkillDTO } from "../dtos/mentorDtos";
 
-import { createMentorDTO, MentorReturnDTO, MentorsWithRelations } from "../dtos/mentorDtos";
+import { createMentorDTO, MentorReturnDTO, MentorsWithRelations, updateMentorDTO } from "../dtos/mentorDtos";
 
 
 export interface IMentorRepository {
@@ -9,6 +9,7 @@ export interface IMentorRepository {
   findAll(options:object):Promise<MentorReturnDTO[]>;
   totalCount():Promise<number>;
   getMentorById(id:string):Promise<MentorsWithRelations|null>;
+  updateMentor(id:string,data:Partial<updateMentorDTO>):Promise<Omit<MentorsWithRelations,"skills">>
 }
 
 

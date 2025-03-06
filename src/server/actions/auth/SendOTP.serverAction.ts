@@ -28,6 +28,10 @@ const {email} = validEmail
       throw new ValidationError("Email is not found");
     }
 
+    if (!existingEmail.emailVerified) {
+      throw new ValidationError("Email is not verified yet");
+    }
+
 
 
      await otpService.generateOtpAndSend(email)

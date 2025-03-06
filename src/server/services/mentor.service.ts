@@ -1,4 +1,4 @@
-import { createMentorDTO, getAllApprovalsDTO, MentorReturnDTO, MentorsWithRelations } from "../core/dtos/mentorDtos";
+import { createMentorDTO, getAllApprovalsDTO, getAllMentorsDTO, MentorReturnDTO, MentorsWithRelations, MentorVerifiedStatus } from "../core/dtos/mentorDtos";
 import { ValidationError } from "../core/errors/errors";
 import { IMentorRepository } from "../core/interfaces/mentor.repository.interface";
 
@@ -51,6 +51,35 @@ export class MentorServiceImplementation implements IMentorService {
     }
   }
 
+  async  getAllMentorsWithPagination(skip:number,limit:number): Promise<getAllMentorsDTO>{
+    try {
+
+      const mentors = await this.mentorRepository.findAll({
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+        where: { verified: 'verified' },
+        include: {
+          profile: true,
+        },
+
+      });
+      const totalCount = await this.mentorRepository.totalCount();
+
+      const data = {
+        mentors,
+        totalPages: Math.ceil(totalCount / limit),
+        totalCount,
+      };
+      return data;
+
+    } catch (error) {
+      if (error instanceof ValidationError) throw error;
+      console.error("Error in mentor service gett all func:", error);
+      throw new Error("Failed to get all  mentor");
+    }
+  }
+
   async getMentorDetailsById(id:string): Promise<MentorsWithRelations> {
     try {
       if(!id){
@@ -66,6 +95,28 @@ export class MentorServiceImplementation implements IMentorService {
       if (error instanceof ValidationError) throw error;
       console.error("Error in mentor service get by id func:", error);
       throw new Error("Failed to get by id mentor");
+    }
+  }
+ async  approveOrRejectMentorApproval(id:string,status:string):Promise<MentorReturnDTO>{
+    try {
+      if(!id){
+        throw new ValidationError("id is required")
+      }
+      if(!["verified","rejected"].includes(status)){
+        throw new ValidationError("Invalid status to change mentor approval");
+      }
+
+      const mentor =  await this.mentorRepository.updateMentor(id,{verified:status as MentorVerifiedStatus})
+      if(!mentor){
+        throw new ValidationError(`failed to update  mentor details to  ${status} `)
+      }
+      const mentorDetails = await this.mentorRepository
+
+      return mentor
+    } catch (error) {
+      if (error instanceof ValidationError) throw error;
+      console.error("Error in mentor service approve or reject approval func:", error);
+      throw new Error("Failed to approve or reject approval mentor");
     }
   }
 

@@ -11,7 +11,15 @@ export interface MentorDTO {
   verified?: 'pending' | 'verified' | 'rejected';
 }
 
+export interface updateMentorDTO {
 
+  aboutMe?: string;
+  expertise: string;
+  documents: string[];
+  languages: string[];
+  hourlyRate: number;
+  verified?: 'pending' | 'verified' | 'rejected';
+}
 export interface createMentorDTO extends MentorDTO{
 
   experiences:ExperienceDTO[];
@@ -21,7 +29,15 @@ export interface createMentorDTO extends MentorDTO{
 
 }
 
+export interface getAllMentorsDTO{
 
+
+  mentors:MentorReturnDTO[]
+  totalPages:number
+
+  totalCount:number
+
+}
 export interface getAllApprovalsDTO{
 
   approvals:MentorReturnDTO[]
@@ -31,6 +47,7 @@ export interface getAllApprovalsDTO{
 
 }
 
+export type MentorVerifiedStatus ='pending' | 'verified' | 'rejected'
 
 export interface MentorReturnDTO {
   id:string
@@ -41,7 +58,7 @@ export interface MentorReturnDTO {
   documents: string[];
   languages: string[];
   hourlyRate: number;
-  verified?: 'pending' | 'verified' | 'rejected';
+  verified?: MentorVerifiedStatus ;
   createdAt:Date;
   updatedAt:Date;
 }

@@ -11,5 +11,6 @@ export interface IUserService {
   updateUserDetails(data:updateUserDTO,image:File|null):Promise<IUser>;
   getAllUsersWithPagination(skip:number,limit:number):Promise<getAllUsersDTO>
   changeIsBlockedStatus(id:string,status:boolean):Promise<boolean>;
+  deleteUser(id:string):Promise<boolean>;
 
 }

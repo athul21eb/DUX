@@ -1,9 +1,9 @@
 import { UserProfileForm } from "@/components/forms/updateUserDetailsForm";
-import UserProfileClient from "@/components/layouts/UserProfileClient";
+
 import { auth } from "@/lib/auth/auth";
-import {getUserWithoutIDByEmail } from "@/lib/db/user";
+
 import { Fetch_User_Details_By_Email_Server_Action } from "@/server/actions/user/fetch-user-details.server-action";
-import { userService } from "@/server/services/user.service";
+
 
 export default async function ProfilePage() {
 
@@ -20,7 +20,7 @@ export default async function ProfilePage() {
   const user  = res.data
 
   return <div>
-    user - userprofile
+
     <UserProfileForm user={res.data} />
   </div>;
 }

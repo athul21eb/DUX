@@ -79,12 +79,12 @@ model Mentor {
   userId      String    @unique
   profile        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   skills      MentorSkill[]  // Many-to-Many relation through a junction table
-  documents   String[]  // Array of file paths or URLs for uploaded documents
+  documents   String[]
   aboutMe     String? // Short description or bio
   expertise    String
-  experiences Experience[]  // Array of experiences, could be a JSON object or structured data
-  educations  Education[]  // Array of educational details, could be a JSON object or structured data
-  languages   String[]  // Array of languages spoken
+  experiences Experience[]
+  educations  Education[]
+  languages   String[]  
   hourlyRate  Int
   verified    VerificationStatus  @default(pending)
   createdAt DateTime @default(now())
@@ -105,7 +105,7 @@ model Experience {
   endDate     DateTime?
   description String?
 
-  mentor Mentor @relation(fields: [mentorId], references: [id])
+  mentor Mentor @relation(fields: [mentorId], references: [id], onDelete: Cascade)
 }
 
 model Education {
@@ -117,7 +117,7 @@ model Education {
   endDate     DateTime?
   description String?
 
-  mentor Mentor @relation(fields: [mentorId], references: [id])
+  mentor Mentor @relation(fields: [mentorId], references: [id], onDelete: Cascade)
 }
 model Skill {
   id      String   @id @default(uuid())

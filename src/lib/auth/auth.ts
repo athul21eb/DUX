@@ -24,6 +24,10 @@ export const {
           );
 
           if (existingUser) {
+
+            if(!existingUser.emailVerified&&existingUser.role==="mentor"){
+              return false
+            }
             const existingGoogleAccount =
               await googleAccountService.getGoogleOAuthAccount(
                 existingUser.id ?? ""
@@ -62,6 +66,7 @@ export const {
       return true;
     },
     async jwt({ token }) {
+      
       if (!token.email) return token;
 
       const existingUser = await userService.getUserDetailsByEmail(token.email);
@@ -92,7 +97,7 @@ export const {
       };
     },
   },
-  
+
   session: {
     strategy: "jwt",
   },

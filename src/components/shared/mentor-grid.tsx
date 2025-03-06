@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { LayoutGrid, List } from "lucide-react"
+
 
 
 
@@ -42,8 +42,8 @@ export default function MentorGrid({ mentors }: any) {
             >
               <div className="aspect-[4/3] overflow-hidden">
                 <Image
-                  src={mentor.image || "./dux.svg"}
-                  alt={mentor.name}
+                  src={mentor.profile.image || "./dux.svg"}
+                  alt={mentor.name||"u"}
                   width={400}
                   height={300}
                   className="object-cover transition-transform group-hover:scale-105"
@@ -51,7 +51,7 @@ export default function MentorGrid({ mentors }: any) {
               </div>
               <div className="p-4">
                 <h3 className="font-semibold">{mentor.name}</h3>
-                <p className="text-sm text-muted-foreground">{mentor.role}</p>
+                <p className="text-sm text-muted-foreground">{mentor.hourlyRate}</p>
                 <Button className="mt-4 w-full" variant="secondary">
                   View profile
                 </Button>

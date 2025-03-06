@@ -133,7 +133,7 @@ export class UserService implements IUserService {
     try {
       const existingUser = await this.userRepository.getUserByEmail(email);
       if (!existingUser) {
-        throw new ValidationError("user doesn't exist, invalid email");
+        throw new ValidationError("email doesn't exist, invalid email");
       }
       const updatedUser = await this.userRepository.updateUser(
         existingUser.id,
@@ -321,6 +321,22 @@ export class UserService implements IUserService {
       if (error instanceof ValidationError) throw error;
       console.error("Error in skill service get user func :", error);
       throw new Error("failed to fetch  get users");
+    }
+  }
+
+   ////-------------------getUserDetailsByEmail
+
+   async deleteUser(id:string): Promise<boolean> {
+    try {
+      const deleted = await this.userRepository.deleteUser(id)
+      if (!deleted) {
+        throw new ValidationError("fail to delete the user ");
+      }
+      return deleted;
+    } catch (error) {
+      if (error instanceof ValidationError) throw error;
+      console.error("Error in user  Service:", error);
+      throw new Error("Failed to get details of user  ");
     }
   }
 }

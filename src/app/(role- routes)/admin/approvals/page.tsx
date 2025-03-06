@@ -16,7 +16,7 @@ async function MentorApprovalsManagementPage() {
       </div>
     );
   }
-
+console.log(initialData.data );
   return (
     <div>
       {initialData.data && (

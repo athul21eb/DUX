@@ -3,12 +3,24 @@ import MentorGrid from "@/components/shared/mentor-grid";
 import { SearchBar } from "@/components/shared/search-bar";
 import { Button } from "@/components/ui/button";
 import { getAllUsersWithPagination } from "@/lib/db/user";
+import { Get_All_Mentor_With_Pagination_Server_Action } from "@/server/actions/admin/mentorsManagement/get-all-mentors-with-pagination.server-action";
 import { Link } from "next-view-transitions";
 
 export default async function MentorsPage() {
 
-  //  const result = await getAllUsersWithPagination(1,5);
-  //  console.log(result);
+   const initialData = await Get_All_Mentor_With_Pagination_Server_Action(1,10);
+
+   if (!initialData.success) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="bg-red-100 p-4 rounded-md text-red-700">
+          Failed to fetch mentor : {initialData.message}
+        </div>
+      </div>
+    );
+  }
+
+  // initialData.data&&console.log(initialData.data);
 
 
   return (

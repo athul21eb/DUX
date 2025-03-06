@@ -8,7 +8,7 @@ interface MentorApprovalParams {
   };
 }
 
-export default async function MentorApprovalDetailPage({ params }: MentorApprovalParams) {
+export default async function MentorDetailPage({ params }: MentorApprovalParams) {
   const { mentorId } = await params;
   const approval = await Get_Mentor_Details_By_Id_Server_Action(mentorId);
 
@@ -25,8 +25,8 @@ export default async function MentorApprovalDetailPage({ params }: MentorApprova
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Mentor Approval Details</h1>
-      <MentorDetailsClient mentor={approval.data} mentorId={mentorId} />
+      <h1 className="text-3xl font-bold mb-6 text-center" >Mentor  Details</h1>
+      <MentorDetailsClient mentor={approval.data} mentorId={mentorId} approvalOrNot={false}/>
     </div>
   );
 }
