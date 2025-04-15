@@ -3,6 +3,7 @@
 import { UserProfileDTO } from "@/server/core/dtos/userDtos";
 import { ValidationError } from "@/server/core/errors/errors";
 import { userService } from "@/server/services/user.service";
+import { UserManagementResponseMessages } from "@/server/shared/constants/constant";
 import { ErrorResponse, SuccessResponse, TErrorResponse, TSuccessResponse } from "@/utils/serverActionResponses/serverActionResponses"
 
 
@@ -12,13 +13,13 @@ export const Fetch_User_Details_By_Email_Server_Action = async (
 ): Promise<TSuccessResponse<UserProfileDTO> | TErrorResponse> => {
   try {
     if (!userEmail) {
-      throw new ValidationError("Invalid user email");
+      throw new ValidationError(UserManagementResponseMessages.ErrorInvalidInputToFetchUsersDetailsByEmail);
     }
 
     const fetchedUser = await userService.getUserDetailsByEmail(userEmail);
 
     if (!fetchedUser) {
-      throw new ValidationError("User not found");
+      throw new ValidationError(UserManagementResponseMessages.ErrorUserNotFound);
     }
 
     const presenter: UserProfileDTO = {
@@ -30,9 +31,9 @@ export const Fetch_User_Details_By_Email_Server_Action = async (
       image: fetchedUser.image ?? undefined,
     };
 
-    return SuccessResponse("Successfully fetched user data", presenter);
+    return SuccessResponse(UserManagementResponseMessages.SuccessUserDetailsFetched, presenter);
   } catch (error) {
     console.error("Error in Fetch_User_Details_By_Email_Server_Action:", error);
-    return ErrorResponse(error instanceof ValidationError ? error.message : "Failed to fetch user details");
+    return ErrorResponse(error instanceof ValidationError ? error.message : UserManagementResponseMessages.ErrorFailedToFetchUserDetails, );
   }
 };

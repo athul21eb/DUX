@@ -5,6 +5,7 @@ import { getAllUsersDTO } from "@/server/core/dtos/userDtos";
 import { ValidationError } from "@/server/core/errors/errors";
 import { skillService } from "@/server/services/skill.service";
 import { userService } from "@/server/services/user.service";
+import { UserManagementResponseMessages } from "@/server/shared/constants/constant";
 import {
   ErrorResponse,
   SuccessResponse,
@@ -31,12 +32,12 @@ export  const Get_All_Users_With_Pagination_Server_Action = async (
     };
 
 
-    return SuccessResponse("successfully fetched Users ", presenter);
+    return SuccessResponse(UserManagementResponseMessages.SuccessUsersFetched, presenter);
   } catch (error) {
     if (error instanceof ValidationError) {
       return ErrorResponse(error.message);
     }
     console.error(error, "error in get Users server action");
-    return ErrorResponse(error instanceof Error ? error.message : "failed to fetch Users data");
+    return ErrorResponse(error instanceof Error ? error.message : UserManagementResponseMessages.ErrorFailedToFetchUsers);
   }
 };

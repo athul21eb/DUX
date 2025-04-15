@@ -40,6 +40,7 @@ interface ApprovalClientProps {
   mentor: MentorsWithRelations;
   mentorId: string;
   approvalOrNot?: boolean;
+  adminOrNot?:boolean
 }
 
 const formatDate = (date: Date | null | undefined) => {
@@ -54,6 +55,7 @@ export function MentorDetailsClient({
   mentor,
   mentorId,
   approvalOrNot = true,
+  adminOrNot=true,
 }: ApprovalClientProps) {
   const [currentDocIndex, setCurrentDocIndex] = useState(0);
   const [numPages, setNumPages] = useState<number | null>(null);
@@ -131,7 +133,7 @@ export function MentorDetailsClient({
                 </div>
               </div>
             </div>
-            {approvalOrNot && (
+            {(approvalOrNot )&& (
               <div className="flex flex-col sm:flex-row gap-2">
                 <Button
                   variant="default"
@@ -149,6 +151,14 @@ export function MentorDetailsClient({
                 </Button>
               </div>
             )}
+
+            { !adminOrNot&& <Button
+                  variant="default"
+                  onClick={() => {}}
+
+                >
+                  Book now 
+                </Button>}
           </div>
         </CardHeader>
       </Card>
@@ -159,7 +169,7 @@ export function MentorDetailsClient({
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="experience">Experience</TabsTrigger>
           <TabsTrigger value="education">Education</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
+          {adminOrNot?<TabsTrigger value="documents">Documents</TabsTrigger>:<TabsTrigger value="reviews">Reviews</TabsTrigger>}
         </TabsList>
 
         {/* Profile Tab */}
@@ -334,6 +344,24 @@ export function MentorDetailsClient({
                   No education information provided.
                 </p>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Reviews  Tab */}
+        <TabsContent value="reviews">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <GraduationCap className="h-5 w-5" /> Reviews
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+
+                <p className="text-muted-foreground">
+                  No reviews information provided.
+                </p>
+
             </CardContent>
           </Card>
         </TabsContent>

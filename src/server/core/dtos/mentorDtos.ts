@@ -25,10 +25,18 @@ export interface createMentorDTO extends MentorDTO{
   experiences:ExperienceDTO[];
   educations:EducationDTO[];
   skills:Skill[]
+  timeSlots:timeSlotsDTO[]
 
 
 }
 
+interface timeSlotsDTO{
+  id?: string;
+  mentorId?: string;
+  start: string;
+  end: string;
+  isBooked?: boolean;
+}
 export interface getAllMentorsDTO{
 
 

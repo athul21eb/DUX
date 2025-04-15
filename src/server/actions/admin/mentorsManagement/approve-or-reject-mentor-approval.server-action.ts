@@ -3,6 +3,7 @@
 import { ValidationError } from "@/server/core/errors/errors";
 import { mentorService } from "@/server/services/mentor.service";
 import { userService } from "@/server/services/user.service";
+import { MentorMangementResponseMessages } from "@/server/shared/constants/constant";
 import { sendMentorApplicationApprovalSuccessEmail, sendMentorApplicationRejectionEmail } from "@/utils/mail/metorApproveOrRejectMail";
 import {
   ErrorResponse,
@@ -17,13 +18,13 @@ export const Admin_Approve_Or_Reject_Mentor_Approval_Server_Action = async (
 ): Promise<TSuccessResponse<null> | TErrorResponse> => {
   try {
     if (!mentorId || !["verified", "rejected"].includes(status)) {
-      throw new ValidationError("Invalid input to approve or reject mentor application");
+      throw new ValidationError(MentorMangementResponseMessages.ErrorInvalidInput);
     }
 
     const updatedMentor = await mentorService.approveOrRejectMentorApproval(mentorId, status);
 
     if (!updatedMentor?.profile?.email) {
-      throw new ValidationError(`Failed to update mentor details to ${status}`);
+      throw new ValidationError(MentorMangementResponseMessages.ErrorFailedToApproveOrReject(status));
     }
 
     if (status === "verified") {
@@ -31,7 +32,7 @@ export const Admin_Approve_Or_Reject_Mentor_Approval_Server_Action = async (
 
       const mailSent = await sendMentorApplicationApprovalSuccessEmail(updatedMentorProfile.email);
       if (!mailSent) {
-        throw new ValidationError("Failed to send approval email, but mentor was approved successfully.");
+        throw new ValidationError(MentorMangementResponseMessages.ErrorFailedToSendApprovalEmail);
       }
     } else {
 
@@ -40,16 +41,16 @@ export const Admin_Approve_Or_Reject_Mentor_Approval_Server_Action = async (
 
       const mailSent = await sendMentorApplicationRejectionEmail(updatedMentor.profile.email);
       if (!mailSent) {
-        throw new ValidationError("Failed to send rejection email, but mentor was rejected successfully.");
+        throw new ValidationError(MentorMangementResponseMessages.ErrorFailedToSendRejectionEmail);
       }
     }
 
-    return SuccessResponse(`Mentor application successfully ${status}`);
+    return SuccessResponse(MentorMangementResponseMessages.SuccessMentorApplicationStatusChanged(status));
   } catch (error) {
     if (error instanceof ValidationError) {
       return ErrorResponse(error.message);
     }
     console.error(error, "Error in approve or reject mentor application server action");
-    return ErrorResponse(error instanceof Error ? error.message : "Failed to approve or reject mentor application");
+    return ErrorResponse(error instanceof Error ? error.message : MentorMangementResponseMessages.ErrorDefaultForStatusChange);
   }
 };

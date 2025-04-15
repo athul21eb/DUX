@@ -3,15 +3,21 @@ import { IUserRepository } from "../core/interfaces/user.repository.interface";
 import { IUser } from "../core/entities/user";
 import { createUserDTO } from "../core/dtos/userDtos";
 import { Role } from "@prisma/client";
+import { BaseRepository } from "./prisma.BaseRepository";
 
-export class PrismaUserRepository implements IUserRepository {
+export class PrismaUserRepository extends BaseRepository<IUser> implements IUserRepository {
+
+  constructor(){
+    super(prisma.user)
+  }
+  
   async createUser(user: createUserDTO): Promise<IUser> {
 
 
     return await prisma.user.create({
       data: {
         ...user,
-        role: user.role as Role, 
+        role: user.role as Role,
       },
     });
   }

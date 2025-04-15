@@ -5,6 +5,7 @@ import { IOtpService } from "../core/interfaces/otp.service.interface";
 import { prismaOtpInstance } from "../repositories/prisma.otp.repository";
 import { ValidationError } from "../core/errors/errors";
 import { sendForgotPasswordOtp } from "@/utils/mail/otpMail";
+import { UserManagementResponseMessages } from "../shared/constants/constant";
 
 export class OtpServiceImpl implements IOtpService {
   private otpRepository: IOtpRepository;
@@ -22,7 +23,7 @@ export class OtpServiceImpl implements IOtpService {
       const created_otp = await this.otpRepository.createOtp(email, otp);
 
       if (!created_otp) {
-        throw new ValidationError("failed to create an otp ");
+        throw new ValidationError(UserManagementResponseMessages.ErrorFaliedToSendOTP);
       }
 
       await sendForgotPasswordOtp(email, created_otp.token);
@@ -30,7 +31,7 @@ export class OtpServiceImpl implements IOtpService {
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in otpService:", error);
-      throw new Error("Failed to send otp to  user");
+      throw new Error(UserManagementResponseMessages.ErrorFaliedToSendOTP);
     }
   }
 
@@ -39,22 +40,22 @@ export class OtpServiceImpl implements IOtpService {
       const existingOTP = await this.otpRepository.getOtpByEmail(email);
 
       if (!existingOTP) {
-        throw new ValidationError("OTP not found");
+        throw new ValidationError(UserManagementResponseMessages.ErrorInvalidOtp);
       }
 
       if (existingOTP.token !== token) {
-        throw new ValidationError("Invalid OTP");
+        throw new ValidationError(UserManagementResponseMessages.ErrorInvalidOtp);
       }
       if (new Date(existingOTP.expiresAt) < new Date()) {
-        throw new ValidationError("OTP expired");
+        throw new ValidationError(UserManagementResponseMessages.ErrorOtpexpired);
       }
 
       return this.otpRepository.deleteOtpByEmail(email);
-      
+
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in otpService:", error);
-      throw new Error("Failed to send otp to  user");
+      throw new Error(UserManagementResponseMessages.ErrorFaliedToVerifyOTP);
     }
   }
 

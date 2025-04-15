@@ -1,4 +1,3 @@
-
 import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
@@ -27,18 +26,41 @@ const hasAccess = (pathname: string, role: string): boolean => {
 
 // Middleware function
 export default auth(async (req: NextRequest) => {
-
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  const role = token?.role ??"undefined";
-  const isBlocked :boolean = token?.isBlocked as boolean;
-
+  const role = token?.role ?? "undefined";
+  const isBlocked = token?.isBlocked as boolean;
+  const tokenError = token?.error;
 
   const isAuthenticated = !!token;
   const { pathname } = req.nextUrl;
 
-  console.log("Middleware:", pathname, "Role =>", role, "Blocked =>", isBlocked);
+  console.log(
+    "Middleware:",
+    pathname,
+    "Role =>",
+    role,
+    "Blocked =>",
+    isBlocked,
+    "Error=>",
+    tokenError
+  );
+
 
   if (pathname.startsWith("/api/auth")) {
+    return NextResponse.next();
+  }
+
+  if (tokenError === "RefreshAccessTokenError") {
+    // Clear cookies
+
+   // Only redirect to login if we're not already there
+    if (pathname !== "/signup") {
+      return NextResponse.redirect(
+        new URL("/signup?error=session_expired", req.nextUrl.origin)
+      );
+    }
+
+    // If we're already at login, just continue
     return NextResponse.next();
   }
 
@@ -61,7 +83,7 @@ export default auth(async (req: NextRequest) => {
   return NextResponse.next();
 });
 
-// Apply middleware to relevant routes
+// // Apply middleware to relevant routes
 export const config = {
   matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
 };

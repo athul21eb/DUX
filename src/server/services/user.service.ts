@@ -13,6 +13,7 @@ import { compare, hash } from "bcrypt-ts";
 import { prismaRepoInstance } from "../repositories/prisma.user.repository";
 import { signIn } from "@/lib/auth/auth";
 import uploadFile from "@/utils/cloudinary/cloudinary";
+import {  UserManagementResponseMessages } from "../shared/constants/constant";
 
 
 export class UserService implements IUserService {
@@ -28,20 +29,20 @@ export class UserService implements IUserService {
       if (userExists) {
         if (userExists.googleId || !userExists.password) {
           throw new ValidationError(
-            "Email is already registered via Google SignIn. Please try with another email."
+            UserManagementResponseMessages.ErrorEmailRegisteredwithGoogle
           );
         }
 
         if (!userExists.emailVerified) {
-          throw new ValidationError("Email is not verified yet. check the mailBox");
+          throw new ValidationError(UserManagementResponseMessages.ErrorEmailNotVerified);
         }
 
-        throw new ValidationError("Email is already taken. Please use another email.");
+        throw new ValidationError(UserManagementResponseMessages.ErrorEmailAlreadyExists);
       }
 
       const hashedPassword = await hash(data.password, 10);
       if(!hashedPassword){
-        throw new ValidationError("failed to register user due to password  hashing problem");
+        throw new ValidationError(UserManagementResponseMessages.ErrorFaliedToSignUp);
 
       }
 
@@ -49,10 +50,11 @@ export class UserService implements IUserService {
         ...data,
         password: hashedPassword,
       });
+
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in UserService:", error);
-      throw new Error("Failed to register user");
+      throw new Error(UserManagementResponseMessages.ErrorFaliedToSignUp);
     }
   }
 
@@ -64,12 +66,12 @@ export class UserService implements IUserService {
       const userExists = await this.userRepository.getUserByEmail(email);
 
       if (!userExists) {
-        throw new ValidationError("User Does Not Exist");
+        throw new ValidationError(UserManagementResponseMessages.ErrorUserNotFound);
       }
 
       if (userExists.email && (userExists.googleId || !userExists.password)) {
         throw new ValidationError(
-          "Email already registered via Google. Please Login Using Google SignIn"
+          UserManagementResponseMessages.ErrorEmailRegisteredwithGoogle
         );
       }
 
@@ -79,12 +81,12 @@ export class UserService implements IUserService {
         !userExists.emailVerified
       ) {
         throw new ValidationError(
-          "Email verification is not  done yet. Please confirm your email address"
+          UserManagementResponseMessages.ErrorEmailNotVerified
         );
       }
 
       if (userExists.isBlocked) {
-        throw new ValidationError("User Account is Blocked !");
+        throw new ValidationError(UserManagementResponseMessages.ErrorUserisBlocked);
       }
 
       const isPasswordMatch = await compare(
@@ -93,7 +95,7 @@ export class UserService implements IUserService {
       );
 
       if (!isPasswordMatch) {
-        throw new ValidationError("Invalid Credentials");
+        throw new ValidationError(UserManagementResponseMessages.ErrorInvalidCreadentials);
       }
       const signInResponse = await signIn("credentials", {
         email: userExists.email,
@@ -108,7 +110,7 @@ export class UserService implements IUserService {
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in UserService:", error);
-      throw new Error("Failed to login user ");
+      throw new Error(UserManagementResponseMessages.ErrorFailedToLogin);
     }
   }
 
@@ -118,13 +120,13 @@ export class UserService implements IUserService {
     try {
       const existingUser = await this.userRepository.getUserByEmail(email);
       if (!existingUser) {
-        throw new ValidationError("user doesn't exist, invalid email");
+        throw new ValidationError(UserManagementResponseMessages.ErrorUserNotFound);
       }
       return existingUser;
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in user  Service:", error);
-      throw new Error("Failed to get details of user  ");
+      throw new Error(UserManagementResponseMessages.ErrorFailedToFetchUserDetails);
     }
   }
   ////change email verified to true by id
@@ -133,14 +135,14 @@ export class UserService implements IUserService {
     try {
       const existingUser = await this.userRepository.getUserByEmail(email);
       if (!existingUser) {
-        throw new ValidationError("email doesn't exist, invalid email");
+        throw new ValidationError(UserManagementResponseMessages.ErrorUserNotFound);
       }
       const updatedUser = await this.userRepository.updateUser(
         existingUser.id,
         { emailVerified: new Date() }
       );
       if (!updatedUser) {
-        throw new ValidationError("failed to do email verification");
+        throw new ValidationError(UserManagementResponseMessages.ErrorFaliledToVerifyEmail);
       }
 
       return updatedUser;
@@ -150,7 +152,7 @@ export class UserService implements IUserService {
         "Error in user service changeEmailVerificationById func :",
         error
       );
-      throw new Error("failed to do email verification");
+      throw new Error(UserManagementResponseMessages.ErrorFaliledToVerifyEmail);
     }
   }
 
@@ -163,7 +165,7 @@ export class UserService implements IUserService {
         googleId,
       });
       if (!updatedUser) {
-        throw new ValidationError("failed to do email verification");
+        throw new ValidationError(UserManagementResponseMessages.ErrorFaliledToVerifyEmail);
       }
 
       return updatedUser;
@@ -173,7 +175,7 @@ export class UserService implements IUserService {
         "Error in user service changeEmailVerificationById func :",
         error
       );
-      throw new Error("failed to do email verification");
+      throw new Error(UserManagementResponseMessages.ErrorFaliledToVerifyEmail);
     }
   }
 
@@ -184,18 +186,16 @@ export class UserService implements IUserService {
       const existingUser = await this.userRepository.getUserByEmail(email);
 
       if (!existingUser) {
-        throw new ValidationError("Email not found");
+        throw new ValidationError(UserManagementResponseMessages.ErrorUserNotFound);
       }
 
       if (!existingUser.password || existingUser.googleId) {
-        throw new ValidationError(
-          " Google via Signin Account can not use change password"
-        );
+        throw new ValidationError(UserManagementResponseMessages.ErrorGoogleAccountCannotChangePassword);
       }
       const isPasswordMatch = await compare(password, existingUser.password);
       if (isPasswordMatch) {
         throw new ValidationError(
-          "new password must be different from old password"
+          UserManagementResponseMessages.ErrorNewPasswordAndOldPasswordSame
         );
       }
       const hashedPassword = await hash(password, 10);
@@ -208,13 +208,13 @@ export class UserService implements IUserService {
       );
 
       if (!updatedUser) {
-        throw new ValidationError("failed to change password");
+        throw new ValidationError(UserManagementResponseMessages.ErrorFaliedToChangePassword);
       }
       return updatedUser;
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in user service changePasswordById func :", error);
-      throw new Error("failed to do change password");
+      throw new Error(UserManagementResponseMessages.ErrorFaliedToChangePassword);
     }
   }
 
@@ -228,7 +228,7 @@ export class UserService implements IUserService {
       const { name, email, phone, gender, dob } = data;
       const user = await this.userRepository.getUserByEmail(email);
       if (!user) {
-        throw new ValidationError("user not found ");
+        throw new ValidationError(UserManagementResponseMessages.ErrorUserNotFound);
       }
 
       let imageUrl = user.image;
@@ -237,7 +237,7 @@ export class UserService implements IUserService {
           imageUrl = await uploadFile(image);
         } catch (error) {
           console.error("failed to upload image", error);
-          throw new ValidationError("failed to upload the image");
+          throw new ValidationError(UserManagementResponseMessages.ErrorFaliedToUploadProfilePicture);
         }
       }
       const isDataUnchanged =
@@ -259,13 +259,13 @@ export class UserService implements IUserService {
         image: imageUrl ?? undefined,
       });
       if (!updatedUser) {
-        throw new ValidationError("failed to update the user ");
+        throw new ValidationError(UserManagementResponseMessages.ErrorFailedToUpdateUserDetails);
       }
       return updatedUser;
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in user service update user func :", error);
-      throw new Error("failed to do update user");
+      throw new Error(UserManagementResponseMessages.ErrorFailedToUpdateUserDetails);
     }
   }
 
@@ -292,7 +292,7 @@ export class UserService implements IUserService {
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in skill service get user func :", error);
-      throw new Error("failed to fetch  get users");
+      throw new Error(UserManagementResponseMessages.ErrorFailedToFetchUsers);
     }
   }
 
@@ -301,26 +301,28 @@ export class UserService implements IUserService {
   async changeIsBlockedStatus(id: string, status: boolean): Promise<boolean> {
     try {
       if (!id || typeof status !== "boolean") {
-        throw new ValidationError("invalid data to change isBlocked status");
+        throw new ValidationError(UserManagementResponseMessages.ErrorInvalidInputToChangeIsBlockedStatus);
       }
 
       const user = await this.userRepository.getUserById(id);
       if (!user) {
-        throw new ValidationError("user does not exist");
+        throw new ValidationError(UserManagementResponseMessages.ErrorUserNotFound);
       }
 
       const changedOrNot = await this.userRepository.changeBlockStatus(user.id, status);
 
       if (!changedOrNot) {
         throw new ValidationError(
-          "failed to  change status of isBlocked of user"
+          UserManagementResponseMessages.ErrorFailedToChangeIsBlocked(
+            status
+          )
         );
       }
       return changedOrNot;
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in skill service get user func :", error);
-      throw new Error("failed to fetch  get users");
+      throw new Error(UserManagementResponseMessages.ErrorFailedToChangeIsBlocked(status));
     }
   }
 
@@ -330,13 +332,13 @@ export class UserService implements IUserService {
     try {
       const deleted = await this.userRepository.deleteUser(id)
       if (!deleted) {
-        throw new ValidationError("fail to delete the user ");
+        throw new ValidationError(UserManagementResponseMessages.ErrorFailedToDeleteUser);
       }
       return deleted;
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in user  Service:", error);
-      throw new Error("Failed to get details of user  ");
+      throw new Error(UserManagementResponseMessages.ErrorFailedToDeleteUser);
     }
   }
 }

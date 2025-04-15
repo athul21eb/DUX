@@ -3,6 +3,7 @@
 import { ValidationError } from "@/server/core/errors/errors";
 import { userService } from "@/server/services/user.service";
 import { verificationTokenService } from "@/server/services/verificationToken.service";
+import { UserManagementResponseMessages } from "@/server/shared/constants/constant";
 import {
   ErrorResponse,
   SuccessResponse,
@@ -28,11 +29,11 @@ export const Email_Verification_Server_Action = async (
         );
 
       if (!verification_token_Send_Or_Not) {
-        throw new ValidationError("Failed to Send verification Link");
+        throw new ValidationError(UserManagementResponseMessages.ErrorFaliedToSendVerificationEmail);
       }
 
       throw new ValidationError(
-        " verification Link has expired , New verification Link successfully sended"
+        UserManagementResponseMessages.ErrorVerificationTokenExpiredAndResend
       );
     }
 
@@ -41,12 +42,12 @@ export const Email_Verification_Server_Action = async (
 
     await verificationTokenService.deleteVerificationById(existingToken.id);
 
-    return SuccessResponse("Email verified successfully");
+    return SuccessResponse(UserManagementResponseMessages.SuccessEmailVerified);
   } catch (error) {
     if (error instanceof ValidationError) {
       return ErrorResponse(error.message);
     }
     console.error(error, "error in  server action");
-    return ErrorResponse(error instanceof Error ? error.message : "failed to");
+    return ErrorResponse(error instanceof Error ? error.message : UserManagementResponseMessages.ErrorFaliledToVerifyEmail);
   }
 };

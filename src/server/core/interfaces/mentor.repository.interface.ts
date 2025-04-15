@@ -9,6 +9,7 @@ export interface IMentorRepository {
   findAll(options:object):Promise<MentorReturnDTO[]>;
   totalCount():Promise<number>;
   getMentorById(id:string):Promise<MentorsWithRelations|null>;
+  getMentorByUserId(id:string):Promise<MentorReturnDTO|null>;
   updateMentor(id:string,data:Partial<updateMentorDTO>):Promise<Omit<MentorsWithRelations,"skills">>
 }
 

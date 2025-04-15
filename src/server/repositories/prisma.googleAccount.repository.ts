@@ -1,9 +1,14 @@
 import { prisma } from "@/lib/db/database";
 import { IAccountRepository } from "../core/interfaces/googleAccount.repository.interface";
 import { AccountEntity } from "../core/entities/googleAccount";
+import { BaseRepository } from "./prisma.BaseRepository";
 
 
-export class AccountRepository implements IAccountRepository {
+export class AccountRepository extends BaseRepository<AccountEntity> implements IAccountRepository {
+
+  constructor() {
+      super(prisma.account);  // Replace 'YourTimeSlotModel' with your actual time slot model
+    }
   async findGoogleOAuthAccountByUserId(userId: string): Promise<AccountEntity | null> {
     try {
       return await prisma.account.findFirst({
@@ -49,3 +54,6 @@ export class AccountRepository implements IAccountRepository {
 
 
 export const  prismaGoogleAccountRepoInstance = new AccountRepository();
+
+
+

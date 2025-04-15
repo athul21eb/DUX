@@ -3,6 +3,7 @@
 import { getAllSkillsDTO } from "@/server/core/dtos/skillDtos";
 import { ValidationError } from "@/server/core/errors/errors";
 import { skillService } from "@/server/services/skill.service";
+import { SkillManagementResponseMessages } from "@/server/shared/constants/constant";
 import {
   ErrorResponse,
   SuccessResponse,
@@ -29,12 +30,12 @@ export  const Get_All_Skills_With_Pagination_Server_Action = async (
     };
 
 
-    return SuccessResponse("successfully fetched skills ", presenter);
+    return SuccessResponse(SkillManagementResponseMessages.SuccessSkillsFetched, presenter);
   } catch (error) {
     if (error instanceof ValidationError) {
       return ErrorResponse(error.message);
     }
     console.error(error, "error in get skills server action");
-    return ErrorResponse(error instanceof Error ? error.message : "failed to fetch skills data");
+    return ErrorResponse(error instanceof Error ? error.message : SkillManagementResponseMessages.ErrorFailedToFetchSkills);
   }
 };

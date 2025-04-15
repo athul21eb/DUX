@@ -20,7 +20,6 @@ import {
 } from "@/utils/validator/authforms";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { register } from "@/lib/actions/auth/register";
 
 import GoogleLogin from "../shared/google-login";
 import toast from "react-hot-toast";
@@ -28,15 +27,33 @@ import { Eye, EyeOff } from "lucide-react";
 import { CardWrapper } from "../shared/cardWrapper";
 import { SubmitButton } from "../ui/submitButton";
 import { SignUp_ServerAction } from "@/server/actions/auth/signUp.serverAction";
+import { signOut } from "next-auth/react";
 
-export default function SignUpForm() {
+export default function SignUpForm({ sessionExpired = false }) {
+
+
+
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+
+  useEffect(() => {
+    // Handle session expiration on the client side
+    if (sessionExpired) {
+      signOut({ redirect: false }); // Don't redirect, we're already on the signup page
+
+      toast.error("your session is expired,please login again ")
+    }
+  }, [sessionExpired]);
+
+
   useEffect(() => {
     return () => {
       toast.dismiss();
     };
   }, []);
+
+
   const form = useForm<TSignUpFormInputType>({
     resolver: zodResolver(SignUpFormSchema),
     defaultValues: {

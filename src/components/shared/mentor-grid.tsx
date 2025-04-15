@@ -1,12 +1,10 @@
 "use client"
 
-import { motion } from "framer-motion"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
-
-
+import { motion } from "framer-motion";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Link } from "next-view-transitions";
 
 export default function MentorGrid({ mentors }: any) {
   return (
@@ -41,20 +39,23 @@ export default function MentorGrid({ mentors }: any) {
               className="group relative overflow-hidden rounded-lg border bg-card text-card-foreground shadow"
             >
               <div className="aspect-[4/3] overflow-hidden">
-                <Image
-                  src={mentor.profile.image || "./dux.svg"}
-                  alt={mentor.name||"u"}
+                <img
+                  src={mentor.profile?.image || "/default-profile.png"}
+                  alt={mentor.profile?.name || "Mentor"}
                   width={400}
                   height={300}
-                  className="object-cover transition-transform group-hover:scale-105"
+                  className="object-cover w-full h-full transition-transform group-hover:scale-105"
                 />
               </div>
-              <div className="p-4">
-                <h3 className="font-semibold">{mentor.name}</h3>
-                <p className="text-sm text-muted-foreground">{mentor.hourlyRate}</p>
-                <Button className="mt-4 w-full" variant="secondary">
-                  View profile
-                </Button>
+              <div className="p-4 text-center">
+                <h3 className="font-semibold text-lg">{mentor.profile?.name}</h3>
+                <p className="text-sm text-muted-foreground">{mentor.expertise}</p>
+                <p className="text-sm text-muted-foreground font-medium">₹{mentor.hourlyRate} / hr</p>
+                <Link href={`/mentors/${mentor.id}`}>
+                  <Button className="mt-4 w-full" variant="secondary">
+                    View Profile
+                  </Button>
+                </Link>
               </div>
             </motion.div>
           ))}
@@ -68,4 +69,3 @@ export default function MentorGrid({ mentors }: any) {
     </div>
   );
 }
-

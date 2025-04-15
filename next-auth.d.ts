@@ -19,5 +19,10 @@ declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
     role: string;
     image:string;
+    isBlocked:boolean;
+    googleId:string|null;
+    accessToken?: string;
+    expires_at?: number;
+    error?:string
   }
 }

@@ -7,8 +7,16 @@ import {
 } from "../core/dtos/mentorDtos";
 import { IMentorRepository } from "../core/interfaces/mentor.repository.interface";
 import { ValidationError } from "../core/errors/errors";
+import { MentorMangementResponseMessages } from "../shared/constants/constant";
+import { BaseRepository } from "./prisma.BaseRepository";
 
-export class PrismaMentorRepositoryImplementation implements IMentorRepository {
+export class PrismaMentorRepositoryImplementation
+  extends BaseRepository<MentorReturnDTO>
+  implements IMentorRepository
+{
+  constructor() {
+    super(prisma.mentor);
+  }
   async createMentorWithRelationsUsingTransaction(
     data: createMentorDTO
   ): Promise<MentorReturnDTO> {
@@ -27,7 +35,10 @@ export class PrismaMentorRepositoryImplementation implements IMentorRepository {
         });
 
         // Validate that Mentor is created
-        if (!mentor) throw new ValidationError("Mentor creation failed");
+        if (!mentor)
+          throw new ValidationError(
+            MentorMangementResponseMessages.ErrorFailedToRegisterMentor
+          );
 
         // Store Experiences
         if (data.experiences?.length) {
@@ -65,13 +76,26 @@ export class PrismaMentorRepositoryImplementation implements IMentorRepository {
             })),
           });
         }
+        if (data.timeSlots?.length) {
+          await tx.timeSlot.createMany({
+            data: data.timeSlots.map((slot) => ({
+              mentorId: mentor.id,
+              startTime: slot.start,
+              endTime: slot.end,
+              date: null, // Default slots have no specific date
+              isBooked: false,
+            })),
+          });
+        }
 
         return mentor;
       });
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in mentor repository transaction:", error);
-      throw new Error("Transaction failed: Mentor creation unsuccessful");
+      throw new Error(
+        MentorMangementResponseMessages.ErrorFailedToRegisterMentor
+      );
     }
   }
 
@@ -83,36 +107,43 @@ export class PrismaMentorRepositoryImplementation implements IMentorRepository {
     return prisma.mentor.count();
   }
 
-  async getMentorById(id: string): Promise<MentorsWithRelations | null> {
-    return prisma.mentor.findUnique({
-      where: { id },
-      include: {
-        educations: true,
-        experiences: true,
-        profile: true,
-        skills: {
-          include: {
-            skill: true, // This ensures that the full Skill details are fetched
-          },
-        },
-      },
-    }).then((mentor) => {
-      if (!mentor) return null;
-
-      return {
-        ...mentor,
-        skills: mentor.skills.map((ms) => ms.skill), // Convert MentorSkill[] to Skill[]
-      };
-    });
+  async getMentorByUserId(id: string): Promise<MentorReturnDTO | null> {
+    return prisma.mentor.findUnique({ where: { userId: id } });
   }
 
-  async updateMentor(id:string,data:Partial<updateMentorDTO>):Promise<Omit<MentorsWithRelations,"skills">>{
+  async getMentorById(id: string): Promise<MentorsWithRelations | null> {
+    return prisma.mentor
+      .findUnique({
+        where: { id },
+        include: {
+          educations: true,
+          experiences: true,
+          profile: true,
+          skills: {
+            include: {
+              skill: true, // This ensures that the full Skill details are fetched
+            },
+          },
+        },
+      })
+      .then((mentor) => {
+        if (!mentor) return null;
 
+        return {
+          ...mentor,
+          skills: mentor.skills.map((ms) => ms.skill), // Convert MentorSkill[] to Skill[]
+        };
+      });
+  }
 
+  async updateMentor(
+    id: string,
+    data: Partial<updateMentorDTO>
+  ): Promise<Omit<MentorsWithRelations, "skills">> {
     return await prisma.mentor.update({
       where: { id },
-      data:data,
-      include:{profile:true,educations:true,experiences:true}
+      data: data,
+      include: { profile: true, educations: true, experiences: true },
     });
   }
 }

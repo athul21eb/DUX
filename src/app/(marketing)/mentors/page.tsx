@@ -2,25 +2,25 @@ import { FilterSidebar } from "@/components/shared/filter-sidebar";
 import MentorGrid from "@/components/shared/mentor-grid";
 import { SearchBar } from "@/components/shared/search-bar";
 import { Button } from "@/components/ui/button";
-import { getAllUsersWithPagination } from "@/lib/db/user";
-import { Get_All_Mentor_With_Pagination_Server_Action } from "@/server/actions/admin/mentorsManagement/get-all-mentors-with-pagination.server-action";
+import { Get_All_Mentor_With_Search_And_Pagination_Server_Action } from "@/server/actions/public/fetch-all-mentors-with-search-and-pagination.server-action";
+
 import { Link } from "next-view-transitions";
 
 export default async function MentorsPage() {
 
-   const initialData = await Get_All_Mentor_With_Pagination_Server_Action(1,10);
+   const initialData = await Get_All_Mentor_With_Search_And_Pagination_Server_Action(1,10);
 
    if (!initialData.success) {
     return (
       <div className="container mx-auto p-6">
         <div className="bg-red-100 p-4 rounded-md text-red-700">
-          Failed to fetch mentor : {initialData.message}
+          Failed to fetch mentors : {initialData.message}
         </div>
       </div>
     );
   }
 
-  // initialData.data&&console.log(initialData.data);
+  // initialData.data&&console.log(initialData.data,initialData.data.mentors[0].profile);
 
 
   return (
@@ -45,7 +45,7 @@ export default async function MentorsPage() {
           <SearchBar />
           <div className="grid gap-8 lg:grid-cols-[240px_1fr]">
             <FilterSidebar />
-            <MentorGrid mentors={[]}/>
+            <MentorGrid mentors={initialData.data?.mentors||[]}/>
           </div>
         </div>
       </main>

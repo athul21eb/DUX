@@ -3,6 +3,7 @@
 import { ValidationError } from "@/server/core/errors/errors";
 import { mentorService } from "@/server/services/mentor.service";
 import { userService } from "@/server/services/user.service";
+import { MentorMangementResponseMessages } from "@/server/shared/constants/constant";
 import uploadFile from "@/utils/cloudinary/cloudinary";
 import {
   ErrorResponse,
@@ -16,7 +17,6 @@ import {
 } from "@/utils/validator/registerMentor";
 import { randomUUID } from "crypto";
 
-
 export const Register_Mentor_Server_Action = async (
   formData: RegisterMentorFormType,
   selectedImage: File,
@@ -24,15 +24,28 @@ export const Register_Mentor_Server_Action = async (
 ): Promise<TSuccessResponse<null> | TErrorResponse> => {
   try {
     const validatedData = RegisterMentorFormSchema.parse(formData);
+
+    console.log('\n',validatedData,selectedImage,selectedDocuments,'[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[ \n')
+
+    // throw new ValidationError(
+    //   MentorMangementResponseMessages.ErrorInvalidInputToRegisterMentor
+    // );
+
     if (!validatedData) {
-      throw new ValidationError("invalid input to register mentor");
+      throw new ValidationError(
+        MentorMangementResponseMessages.ErrorInvalidInputToRegisterMentor
+      );
     }
 
     if (!selectedImage) {
-      throw new ValidationError(" profile picture is required !");
+      throw new ValidationError(
+        MentorMangementResponseMessages.ErrorInvalidInputToRegisterMentorByProfilePicisRequired
+      );
     }
     if (selectedDocuments.length < 3) {
-      throw new ValidationError("  Documents  are required !");
+      throw new ValidationError(
+        MentorMangementResponseMessages.ErrorInvalidInputToRegisterMentorByDocumentsisRequired
+      );
     }
 
     const tempPassword = randomUUID();
@@ -47,7 +60,9 @@ export const Register_Mentor_Server_Action = async (
         }
       } catch (error) {
         console.error("Error uploading profile image:", error);
-        throw new ValidationError("Failed to upload profile image.");
+        throw new ValidationError(
+          MentorMangementResponseMessages.ErrorFaliedToUploadProfilePicture
+        );
       }
     }
 
@@ -61,7 +76,9 @@ export const Register_Mentor_Server_Action = async (
         }
       } catch (error) {
         console.error("Error uploading document:", error);
-        throw new ValidationError("Failed to upload one or more documents.");
+        throw new ValidationError(
+          MentorMangementResponseMessages.ErrorFailedToUploadDocuments
+        );
       }
     }
 
@@ -73,31 +90,40 @@ export const Register_Mentor_Server_Action = async (
       gender: validatedData.gender,
       image: profileImageUrl,
       phone: validatedData.phone,
-      role:"mentor"
-
+      role: "mentor",
     });
 
-    const createdMentor = await mentorService.createMentor({
-      userId: createdUser.id,
-      documents: documentUrls,
-      educations: validatedData.educations,
-      experiences: validatedData.experiences,
-      expertise: validatedData.expertise,
-      skills: validatedData.skills,
-      languages: validatedData.languages,
-      hourlyRate: Number(validatedData.hourlyRate),
-      aboutMe: validatedData.aboutMe,
-    });
+    try {
+      await mentorService.createMentor({
+        userId: createdUser.id,
+        documents: documentUrls,
+        educations: validatedData.educations,
+        experiences: validatedData.experiences,
+        expertise: validatedData.expertise,
+        skills: validatedData.skills,
+        languages: validatedData.languages,
+        hourlyRate: Number(validatedData.hourlyRate),
+        aboutMe: validatedData.aboutMe,
+        timeSlots:validatedData.timeSlots
+      });
+    } catch (e) {
+      await userService.deleteUser(createdUser.id);
 
+      throw e;
+    }
 
     return SuccessResponse(
-      "mentor application submitted successfully . Dux team will contact via email   "
+      MentorMangementResponseMessages.SuccessMentorApplicationApplied
     );
   } catch (error) {
     if (error instanceof ValidationError) {
       return ErrorResponse(error.message);
     }
     console.error(error, "error in  server action");
-    return ErrorResponse(error instanceof Error ? error.message : "failed to");
+    return ErrorResponse(
+      error instanceof Error
+        ? error.message
+        : MentorMangementResponseMessages.ErrorFailedToRegisterMentor
+    );
   }
 };

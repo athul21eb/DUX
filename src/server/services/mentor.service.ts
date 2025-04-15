@@ -4,6 +4,7 @@ import { IMentorRepository } from "../core/interfaces/mentor.repository.interfac
 
 import { IMentorService } from "../core/interfaces/mentor.service.interface";
 import { prismaMentorRepositoryInstance } from "../repositories/prisma.mentor.respositorys";
+import { MentorMangementResponseMessages, UserManagementResponseMessages } from "../shared/constants/constant";
 
 export class MentorServiceImplementation implements IMentorService {
   constructor(private mentorRepository: IMentorRepository) {}
@@ -18,7 +19,7 @@ export class MentorServiceImplementation implements IMentorService {
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in mentor service create func:", error);
-      throw new Error("Failed to create mentor");
+      throw new Error(MentorMangementResponseMessages.ErrorFailedToRegisterMentor);
     }
   }
 
@@ -47,7 +48,7 @@ export class MentorServiceImplementation implements IMentorService {
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in mentor service gett all func:", error);
-      throw new Error("Failed to gett all  mentor");
+      throw new Error(MentorMangementResponseMessages.ErrorFailedToFetchMentorApprovals);
     }
   }
 
@@ -76,39 +77,57 @@ export class MentorServiceImplementation implements IMentorService {
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in mentor service gett all func:", error);
-      throw new Error("Failed to get all  mentor");
+      throw new Error(MentorMangementResponseMessages.ErrorFailedToFetchMentors);
     }
   }
 
   async getMentorDetailsById(id:string): Promise<MentorsWithRelations> {
     try {
       if(!id){
-        throw new ValidationError("id is required")
+        throw new ValidationError(MentorMangementResponseMessages.ErrorFailedToFetchMentorDetailsByIdIsRequired)
       }
 
       const mentor =  await this.mentorRepository.getMentorById(id);
       if(!mentor){
-        throw new ValidationError("failed to fetch mentor details")
+        throw new ValidationError(MentorMangementResponseMessages.ErrorFailedToFetchMentorDetails)
       }
       return mentor
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in mentor service get by id func:", error);
-      throw new Error("Failed to get by id mentor");
+      throw new Error(MentorMangementResponseMessages.ErrorFailedToFetchMentorDetails);
+    }
+  }
+
+  async getMentorDetailsByUserId(id:string): Promise<MentorReturnDTO> {
+    try {
+      if(!id){
+        throw new ValidationError(MentorMangementResponseMessages.ErrorFailedToFetchMentorDetailsByIdIsRequired)
+      }
+
+      const mentor =  await this.mentorRepository.getMentorByUserId(id);
+      if(!mentor){
+        throw new ValidationError(MentorMangementResponseMessages.ErrorFailedToFetchMentorDetails)
+      }
+      return mentor
+    } catch (error) {
+      if (error instanceof ValidationError) throw error;
+      console.error("Error in mentor service get by id func:", error);
+      throw new Error(MentorMangementResponseMessages.ErrorFailedToFetchMentorDetails);
     }
   }
  async  approveOrRejectMentorApproval(id:string,status:string):Promise<MentorReturnDTO>{
     try {
       if(!id){
-        throw new ValidationError("id is required")
+        throw new ValidationError(MentorMangementResponseMessages.ErrorInvalidInputByIdIsRequired)
       }
       if(!["verified","rejected"].includes(status)){
-        throw new ValidationError("Invalid status to change mentor approval");
+        throw new ValidationError(MentorMangementResponseMessages.ErrorInvalidToChangeMentorApprovalStatus);
       }
 
       const mentor =  await this.mentorRepository.updateMentor(id,{verified:status as MentorVerifiedStatus})
       if(!mentor){
-        throw new ValidationError(`failed to update  mentor details to  ${status} `)
+        throw new ValidationError(MentorMangementResponseMessages.ErrorFailedToApproveOrReject(status))
       }
       const mentorDetails = await this.mentorRepository
 
@@ -116,7 +135,7 @@ export class MentorServiceImplementation implements IMentorService {
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in mentor service approve or reject approval func:", error);
-      throw new Error("Failed to approve or reject approval mentor");
+      throw new Error(MentorMangementResponseMessages.ErrorFailedToApproveOrReject(status));
     }
   }
 

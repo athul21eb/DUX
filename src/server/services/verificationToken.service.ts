@@ -5,6 +5,7 @@ import { IVerificationTokenRepository } from "../core/interfaces/verificationTok
 import { v4 as uuidv4 } from "uuid";
 import { sendVerificationEmail } from "@/utils/mail/verificationMail";
 import { prismaVerificationTokenInstance } from "../repositories/prisma.verificationToken.repository";
+import { UserManagementResponseMessages } from "../shared/constants/constant";
 
 export class VerificationTokenService implements IVerificationTokenService {
   constructor(private repository: IVerificationTokenRepository) {}
@@ -15,7 +16,7 @@ export class VerificationTokenService implements IVerificationTokenService {
   ): Promise<IVerificationToken> {
     try {
 
-      
+
       const token = uuidv4();
       let expiredInSecondsEpoch = new Date().getTime() + 1000 * 60 * 60 * 1; // 1 hours
       await this.repository.deleteByEmail(email);
@@ -34,7 +35,7 @@ export class VerificationTokenService implements IVerificationTokenService {
       return Database_stored_verification_token;
     } catch (error) {
       console.error("Error in VerificationTokenService:", error);
-      throw new Error("Failed to generate Verification Token");
+      throw new Error(UserManagementResponseMessages.ErrorFaliedToSendVerificationEmail);
     }
   }
 
@@ -44,14 +45,14 @@ export class VerificationTokenService implements IVerificationTokenService {
     try {
       const existingToken = await this.repository.getByEmail(email);
       if (!existingToken) {
-        throw new ValidationError("token doesn't exist for this email ");
+        throw new ValidationError(UserManagementResponseMessages.ErrorVerificationTokenNotFound);
       }
 
       return existingToken;
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in token service:", error);
-      throw new Error("Failed to verify token");
+      throw new Error(UserManagementResponseMessages.ErrorFaliledToVerifyEmail);
     }
   }
 
@@ -61,14 +62,14 @@ export class VerificationTokenService implements IVerificationTokenService {
   try {
     const existingToken = await this.repository.getByToken(token);
     if (!existingToken) {
-      throw new ValidationError("invalid token ");
+      throw new ValidationError(UserManagementResponseMessages.ErrorVerificationTokenNotFound);
     }
 
     return existingToken;
   } catch (error) {
     if (error instanceof ValidationError) throw error;
     console.error("Error in token service:", error);
-    throw new Error("Failed to verify token");
+    throw new Error(UserManagementResponseMessages.ErrorVerificationTokenNotFound);
   }
   }
 
@@ -77,13 +78,13 @@ export class VerificationTokenService implements IVerificationTokenService {
 
   const token =    await this.repository.deleteById(id);
   if(!token){
-    throw new ValidationError(" failed to delete token ")
+    throw new ValidationError(UserManagementResponseMessages.ErrorVerificationTokenNotFound);
   }
      return token
   } catch (error) {
     if (error instanceof ValidationError) throw error;
     console.error("Error in token service delete method:", error);
-    throw new Error("Failed to verify token");
+    throw new Error(UserManagementResponseMessages.ErrorVerificationTokenNotFound);
   }
   }
 

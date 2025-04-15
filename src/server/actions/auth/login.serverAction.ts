@@ -3,6 +3,7 @@
 import { signIn } from "@/lib/auth/auth";
 import { ValidationError } from "@/server/core/errors/errors";
 import { userService } from "@/server/services/user.service";
+import { UserManagementResponseMessages } from "@/server/shared/constants/constant";
 import {
   ErrorResponse,
   SuccessResponse,
@@ -16,13 +17,14 @@ export const Login_Server_Action = async (
 ): Promise<TSuccessResponse<null> | TErrorResponse> => {
   try {
     const validated_Data = LoginSchema.parse(formData);
-    if (!validated_Data) throw new ValidationError("Invalid Input Data");
+
+    if (!validated_Data) throw new ValidationError(UserManagementResponseMessages.ErrorInvalidInputToLogin);
 
     await userService.loginUser(validated_Data);
 
 
 
-    return SuccessResponse("User LoggedIn Successfully");
+    return SuccessResponse(UserManagementResponseMessages.SuccessUserLoggedIn, null);
 
   } catch (error) {
     if (error instanceof ValidationError) {
@@ -30,7 +32,7 @@ export const Login_Server_Action = async (
     }
     console.error(error, "error in login server action");
     return ErrorResponse(
-      error instanceof Error ? error.message : "failed to login the user"
+      error instanceof Error ? error.message : UserManagementResponseMessages.ErrorFailedToLogin
     );
   }
 };

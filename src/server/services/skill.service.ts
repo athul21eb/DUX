@@ -8,6 +8,7 @@ import {
   getAllSkillsDTO,
   updateSkillDTO,
 } from "../core/dtos/skillDtos";
+import { SkillManagementResponseMessages } from "../shared/constants/constant";
 
 export class SkillService implements ISkillService {
   private skillRepository: ISkillRepository;
@@ -19,18 +20,18 @@ export class SkillService implements ISkillService {
   async createSkill(skill: createSkillDTO): Promise<Skill> {
     try {
       if (!skill.name || !skill.description) {
-        throw new ValidationError("invalid data to create skill");
+        throw new ValidationError(SkillManagementResponseMessages.ErrorInvalidInputToCreate);
       }
       const createdSkill = await this.skillRepository.create(skill);
       if (!createdSkill) {
-        throw new ValidationError("failed to   create skill");
+        throw new ValidationError(SkillManagementResponseMessages.ErrorFailedToCreateSkill);
       }
 
       return createdSkill;
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in skill service create skill func :", error);
-      throw new Error("failed to   create skill");
+      throw new Error(SkillManagementResponseMessages.ErrorFailedToCreateSkill);
     }
   }
 
@@ -63,7 +64,7 @@ export class SkillService implements ISkillService {
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in skill service get skill func :", error);
-      throw new Error("failed to fetch  get skills");
+      throw new Error(SkillManagementResponseMessages.ErrorFailedToFetchSkills);
     }
   }
 
@@ -71,37 +72,37 @@ export class SkillService implements ISkillService {
     try {
       const { id, name, description } = data;
       if (!id || !name || !description) {
-        throw new ValidationError("invalid data to update  skill");
+        throw new ValidationError(SkillManagementResponseMessages.ErrorInvalidInputToUpdate);
       }
       const updated = await this.skillRepository.update(id, {
         name,
         description,
       });
       if (!updated) {
-        throw new ValidationError("failed to   update  skill");
+        throw new ValidationError(SkillManagementResponseMessages.ErrorFailedToUpdateSkill);
       }
       return updated;
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in skill service update skill func :", error);
-      throw new Error("failed to   update  skill");
+      throw new Error(SkillManagementResponseMessages.ErrorFailedToUpdateSkill);
     }
   }
 
   async deleteSkill(id: string): Promise<boolean> {
     try {
       if (!id) {
-        throw new ValidationError("invalid data to delete skill");
+        throw new ValidationError(SkillManagementResponseMessages.ErrorInvalidInputToDelete);
       }
       const deleted = await this.skillRepository.delete(id);
       if (!deleted) {
-        throw new ValidationError("failed to   delete skill");
+        throw new ValidationError(SkillManagementResponseMessages.ErrorFailedToDeleteSkill);
       }
       return deleted;
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in skill service delete skill func :", error);
-      throw new Error("failed to   delete skill");
+      throw new Error(SkillManagementResponseMessages.ErrorFailedToDeleteSkill);
     }
   }
   async getAllSkills():Promise<Skill[]>{
@@ -115,7 +116,7 @@ export class SkillService implements ISkillService {
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       console.error("Error in skill service get all skills func :", error);
-      throw new Error("failed to   get all skill");
+      throw new Error(SkillManagementResponseMessages.ErrorFailedToFetchSkills);
     }
   }
 }

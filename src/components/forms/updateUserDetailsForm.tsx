@@ -25,13 +25,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"; // Import Shadcn Avatar components
-import { UpdateUserProfileAction } from "@/lib/actions/user/updateProfile";
+
 import { UserFormValues, UserSchema } from "@/utils/validator/userformupdate";
 import { getSession, useSession } from "next-auth/react";
 import { IUser } from "@/server/core/entities/user";
 import { Gender, UserProfileDTO } from "@/server/core/dtos/userDtos";
 import { update_User_Details_Server_Action } from "@/server/actions/user/updateUserDetails.serverAction";
-
 
 export function UserProfileForm({ user }: { user: UserProfileDTO }) {
   const [loading, setLoading] = useState<boolean>(false);
@@ -40,7 +39,6 @@ export function UserProfileForm({ user }: { user: UserProfileDTO }) {
   const [imageError, setImageError] = useState<boolean>(false); // State for image loading error
   const { data: session, update } = useSession();
 
-  
   const form = useForm<UserFormValues>({
     resolver: zodResolver(UserSchema),
     defaultValues: {
@@ -220,9 +218,12 @@ export function UserProfileForm({ user }: { user: UserProfileDTO }) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Male">Male</SelectItem>
-                    <SelectItem value="Female">Female</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="prefer-not-to-say">
+                      Prefer not to say
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

@@ -1,8 +1,14 @@
 import { prisma } from "@/lib/db/database";
 import { IVerificationToken } from "../core/entities/verificationToke";
 import { IVerificationTokenRepository } from "../core/interfaces/verificationToken.repository.interface";
+import { BaseRepository } from "./prisma.BaseRepository";
 
-export class PrismaVerificationTokenRepository implements IVerificationTokenRepository {
+export class PrismaVerificationTokenRepository extends BaseRepository<IVerificationToken> implements IVerificationTokenRepository {
+
+  constructor(){
+    super(prisma.verificationToken)
+  }
+  
   async create(data: IVerificationToken): Promise<IVerificationToken> {
     return await prisma.verificationToken.create({ data });
   }

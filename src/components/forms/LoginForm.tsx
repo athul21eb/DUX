@@ -1,12 +1,5 @@
 "use client";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+
 import {
   Form,
   FormControl,
@@ -25,23 +18,22 @@ import { Eye, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { LoginSchema, TLoginFormInputType } from "@/utils/validator/authforms";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { login } from "@/lib/actions/auth/login";
-import { z } from "zod";
+
 import GoogleLogin from "../shared/google-login";
 
 import toast from "react-hot-toast";
 import { CardWrapper } from "../shared/cardWrapper";
 import { Login_Server_Action } from "@/server/actions/auth/login.serverAction";
 import { SubmitButton } from "../ui/submitButton";
-import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+
+
 
 export function LoginForm() {
   const [loading, setLoading] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
 
-  const router = useRouter();
+
 
   const form = useForm<TLoginFormInputType>({
     resolver: zodResolver(LoginSchema),

@@ -1,61 +1,36 @@
-"use client";
+"use client"
 
-import type React from "react";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { motion } from "framer-motion";
-import { CalendarIcon, Plus, X, Camera } from "lucide-react";
-import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
-import { format } from "date-fns";
+import type React from "react"
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { motion } from "framer-motion"
+import { Plus, X, Clock } from "lucide-react"
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { DatePickerWithYear } from "@/components/ui/customizedDatePickerWithYear";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import toast from "react-hot-toast"
 
-import DUX from "../ui/Dux";
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-import { ImageCropper } from "../ui/imageCropper";
-import { Skill } from "@/server/core/entities/skill";
-import {
-  RegisterMentorFormSchema,
-  RegisterMentorFormType,
-} from "@/utils/validator/registerMentor";
-import { Register_Mentor_Server_Action } from "@/server/actions/auth/registerAsMentor/register-mentor.server-action";
+import TimeSlotSelector from "../shared/time-slot-selector"
+import { DatePickerWithYear } from "../ui/customizedDatePickerWithYear"
+import { ImageCropper } from "../ui/imageCropper"
+import DUX from "../ui/Dux"
+import { RegisterMentorFormSchema, RegisterMentorFormType } from "@/utils/validator/registerMentor"
+import { Register_Mentor_Server_Action } from "@/server/actions/auth/registerAsMentor/register-mentor.server-action"
+import { useTransitionRouter } from "next-view-transitions"
+
+
+
+
 
 // Define the expertise options
 const expertiseOptions = [
@@ -70,98 +45,30 @@ const expertiseOptions = [
   "Business Strategy",
   "Leadership",
   "Other",
-];
+]
 
-// Define Experience and Education types
-interface Experience {
-  role: string;
-  company: string;
-  startDate: Date;
-  endDate: Date | null;
-  description: string;
-}
-
-interface Education {
-  degree: string;
-  institution: string;
-  startDate: Date;
-  endDate: Date | null;
-  description: string;
-}
-
-// Define the form schema
-const MentorFormSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email"),
-  phone: z.string().length(10, "Phone number must be 10 digits"),
-  dob: z.date({
-    required_error: "Date of birth is required",
-  }),
-  gender: z.enum(["male", "female", "other", "prefer-not-to-say"], {
-    required_error: "Please select a gender",
-  }),
-  hourlyRate: z.string().refine((val) => Number.parseInt(val) >= 500, {
-    message: "Hourly rate must be at least ₹500",
-  }),
-  expertise: z
-    .string({
-      required_error: "Please select your expertise",
-    })
-    .min(2, "Please select your expertise"),
-  skills: z
-    .array(
-      z.object({
-        id: z.string(),
-        name: z.string(),
-        description: z.string().optional(),
-      })
-    )
-    .min(1, "Please select at least one skill"),
-  aboutMe: z.string().min(10, "Please provide information about yourself"),
-  experiences: z.array(
-    z.object({
-      role: z.string().min(1, "Role is required"),
-      company: z.string().min(1, "Company is required"),
-      startDate: z.date(),
-      endDate: z.date().nullable(),
-      description: z.string(),
-    })
-  ),
-  educations: z.array(
-    z.object({
-      degree: z.string().min(1, "Degree is required"),
-      institution: z.string().min(1, "Institution is required"),
-      startDate: z.date(),
-      endDate: z.date().nullable(),
-      description: z.string(),
-    })
-  ),
-  languages: z.array(z.string()).min(1, "Please add at least one language"),
-});
-
-// type FormValues = z.infer<typeof MentorFormSchema>;
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
-};
+}
 
 export default function MentorProfileForm({
-  availableSkills,
+  availableSkills = [],
 }: {
-  availableSkills: Skill[];
+  availableSkills?: any[]
 }) {
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [previewURL, setPreviewURL] = useState<string | null>(null);
-  const [selectedDocuments, setSelectedDocuments] = useState<File[]>([]);
-  const [newLanguage, setNewLanguage] = useState<string>("");
-  const [showAllSkills, setShowAllSkills] = useState<boolean>(false);
+  const router = useTransitionRouter()
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
+  const [previewURL, setPreviewURL] = useState<string | null>(null)
+  const [selectedDocuments, setSelectedDocuments] = useState<File[]>([])
+  const [newLanguage, setNewLanguage] = useState<string>("")
+  const [showAllSkills, setShowAllSkills] = useState<boolean>(false)
 
   // Image cropping states
-  const [cropDialogOpen, setCropDialogOpen] = useState<boolean>(false);
-  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [cropDialogOpen, setCropDialogOpen] = useState<boolean>(false)
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null)
 
   // Default form values
   const defaultValues: RegisterMentorFormType = {
@@ -193,117 +100,98 @@ export default function MentorProfileForm({
       },
     ],
     languages: [],
-  };
+    timeSlots: [],
+  }
 
   const form = useForm<RegisterMentorFormType>({
     resolver: zodResolver(RegisterMentorFormSchema),
     defaultValues,
-  });
+  })
 
-  const allowedImageTypes = ["jpg", "jpeg", "png", "gif"];
-  const allowedDocumentTypes = ["pdf", "doc", "docx"];
+  const allowedImageTypes = ["jpg", "jpeg", "png", "gif"]
+  const allowedDocumentTypes = ["pdf", "doc", "docx"]
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const fileExtension = file.name.split(".").pop()?.toLowerCase();
+// Replace your existing handleImageChange function with this:
+const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (e.target.files && e.target.files[0]) {
+    const file = e.target.files[0]
+    const fileExtension = file.name.split(".").pop()?.toLowerCase()
 
-      if (!fileExtension || !allowedImageTypes.includes(fileExtension)) {
-        toast.error(
-          "Invalid image format! Allowed formats: jpg, jpeg, png, gif"
-        );
-        return;
-      }
-
-      // Create a URL for the image to crop
-      const imageUrl = URL.createObjectURL(file);
-      setImageToCrop(imageUrl);
-      setCropDialogOpen(true);
+    if (!fileExtension || !allowedImageTypes.includes(fileExtension)) {
+      toast.error("Invalid image format! Allowed formats: jpg, jpeg, png, gif")
+      return
     }
-  };
+
+    // Create a URL for the image and set it for cropping
+    const imageUrl = URL.createObjectURL(file)
+    setImageToCrop(imageUrl)
+    setCropDialogOpen(true)
+  }
+}
 
   const handleCropComplete = (croppedFile: File, croppedUrl: string) => {
     // Make sure we have a valid cropped file before setting state
     if (croppedFile && croppedUrl) {
-      setSelectedImage(croppedFile);
-      setPreviewURL(croppedUrl);
+      setSelectedImage(croppedFile)
+      setPreviewURL(croppedUrl)
 
       // Clean up the temporary image URL
       if (imageToCrop) {
-        URL.revokeObjectURL(imageToCrop);
+        URL.revokeObjectURL(imageToCrop)
       }
     } else {
-      toast.error("Failed to crop image. Please try again.");
+      toast.error("Failed to crop image. Please try again.")
     }
-  };
+  }
 
   const handleAddLanguage = () => {
-    const value = newLanguage.trim();
+    const value = newLanguage.trim()
     if (value) {
-      const currentLanguages = form.getValues("languages");
-      form.setValue("languages", [...currentLanguages, value]);
-      setNewLanguage("");
+      const currentLanguages = form.getValues("languages")
+      form.setValue("languages", [...currentLanguages, value])
+      setNewLanguage("")
     }
-  };
+  }
 
   const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const fileExtension = file.name.split(".").pop()?.toLowerCase();
+      const file = e.target.files[0]
+      const fileExtension = file.name.split(".").pop()?.toLowerCase()
 
       if (!fileExtension || !allowedDocumentTypes.includes(fileExtension)) {
-        toast.error("Invalid document format! Allowed formats: pdf, doc, docx");
-        return;
+        toast.error("Invalid document format! Allowed formats: pdf, doc, docx")
+        return
       }
 
-      setSelectedDocuments((prev) => [...prev, file]);
+      setSelectedDocuments((prev) => [...prev, file])
 
       // Reset the input value so the same file can be selected again
-      e.target.value = "";
+      e.target.value = ""
     }
-  };
+  }
 
   const onSubmit = async (data: RegisterMentorFormType) => {
-    setIsSubmitting(true);
+    setIsSubmitting(true)
 
     try {
       if (selectedDocuments.length < 3) {
-        toast.error(
-          "please upload id proof, experience ,education documents ! "
-        );
-        setIsSubmitting(false);
-        return;
+        toast.error("please upload id proof, experience, education documents!")
+        setIsSubmitting(false)
+        return
       }
       if (!selectedImage) {
-        toast.error("please upload a profile picture !");
-        setIsSubmitting(false);
-        return;
+        toast.error("please upload a profile picture!")
+        setIsSubmitting(false)
+        return
       }
-      const formattedData = {
-        ...data,
-        experiences: data.experiences.map((exp) => ({
-          ...exp,
-          startDate: new Date(exp.startDate),
-          endDate: exp.endDate ? new Date(exp.endDate) : null,
-        })),
-        educations: data.educations.map((edu) => ({
-          ...edu,
-          startDate: new Date(edu.startDate),
-          endDate: edu.endDate ? new Date(edu.endDate) : null,
-        })),
-      };
 
-      console.log(
-        formattedData,
-        "==================data",
-        selectedImage,
-        "=====================image",
-        selectedDocuments,
-        "=====================documents"
-      );
+      console.log("Form submitted successfully:", data)
+      console.log("Selected time slots:", data.timeSlots)
 
+     
+      // Uncomment this when you have the server action ready
       const res = await Register_Mentor_Server_Action(
-        formattedData,
+        data,
         selectedImage,
         selectedDocuments
       );
@@ -315,29 +203,22 @@ export default function MentorProfileForm({
         toast.success(res.message);
         router.push("/");
       }
-
-      //
     } catch (error) {
-      console.error("Error submitting form:", error);
-      toast.error("Error submitting form");
+      console.error("Error submitting form:", error)
+      toast.error("Error submitting form")
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   // Display only first 10 skills if not showing all
-  const displayedSkills = showAllSkills
-    ? availableSkills
-    : availableSkills.slice(0, 10);
+  const displayedSkills = showAllSkills ? availableSkills : availableSkills.slice(0, 10)
+
+
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={fadeIn}
-        transition={{ duration: 0.5 }}
-      >
+      <motion.div initial="hidden" animate="visible" variants={fadeIn} transition={{ duration: 0.5 }}>
         <Card className="w-full">
           <CardHeader className="bg-primary/5 border-b">
             <CardTitle className="text-2xl md:text-3xl flex flex-col-reverse md:flex-row md:justify-between mx-5">
@@ -349,10 +230,7 @@ export default function MentorProfileForm({
           </CardHeader>
           <CardContent className="p-6 md:p-8">
             <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-8"
-              >
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 {/* Main sections in a responsive grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                   {/* Left column - Profile image and basic info */}
@@ -360,9 +238,7 @@ export default function MentorProfileForm({
                     <div className="flex flex-col items-center space-y-4">
                       <Avatar className="w-32 h-32 border-4 border-primary/20">
                         <AvatarImage src={previewURL || ""} alt="Profile" />
-                        <AvatarFallback className="text-2xl">
-                          {form.watch("name")?.charAt(0) || "M"}
-                        </AvatarFallback>
+                        <AvatarFallback className="text-2xl">{form.watch("name")?.charAt(0) || "M"}</AvatarFallback>
                       </Avatar>
                       <div className="w-full flex flex-col items-center">
                         <Input
@@ -372,9 +248,7 @@ export default function MentorProfileForm({
                           onChange={handleImageChange}
                           className="w-full"
                         />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Upload a professional profile picture
-                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">Upload a professional profile picture</p>
                       </div>
                     </div>
 
@@ -386,17 +260,10 @@ export default function MentorProfileForm({
                           <FormItem>
                             <FormLabel>Hourly Rate (₹)</FormLabel>
                             <FormControl>
-                              <Input
-                                {...field}
-                                type="number"
-                                min="500"
-                                placeholder="500"
-                              />
+                              <Input {...field} type="number" min="500" placeholder="500" />
                             </FormControl>
                             <FormMessage />
-                            <p className="text-xs text-muted-foreground">
-                              Minimum rate: ₹500 per hour
-                            </p>
+                            <p className="text-xs text-muted-foreground">Minimum rate: ₹500 per hour</p>
                           </FormItem>
                         )}
                       />
@@ -406,11 +273,7 @@ export default function MentorProfileForm({
                         <p className="text-xs text-muted-foreground mb-2">
                           Upload ID proof, certifications, portfolios, etc.
                         </p>
-                        <Input
-                          type="file"
-                          accept=".pdf,.doc,.docx"
-                          onChange={handleDocumentChange}
-                        />
+                        <Input type="file" accept=".pdf,.doc,.docx" onChange={handleDocumentChange} />
                         {selectedDocuments.length > 0 && (
                           <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
                             {selectedDocuments.map((doc, index) => (
@@ -418,20 +281,14 @@ export default function MentorProfileForm({
                                 key={index}
                                 className="flex items-center justify-between bg-secondary/20 p-2 rounded-md"
                               >
-                                <span className="text-sm truncate max-w-[180px]">
-                                  {doc.name}
-                                </span>
+                                <span className="text-sm truncate max-w-[180px]">{doc.name}</span>
                                 <Button
                                   type="button"
                                   variant="ghost"
                                   size="sm"
                                   className="h-6 w-6 p-0"
                                   onClick={() => {
-                                    setSelectedDocuments(
-                                      selectedDocuments.filter(
-                                        (_, i) => i !== index
-                                      )
-                                    );
+                                    setSelectedDocuments(selectedDocuments.filter((_, i) => i !== index))
                                   }}
                                 >
                                   <X className="h-4 w-4" />
@@ -468,11 +325,7 @@ export default function MentorProfileForm({
                           <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input
-                                {...field}
-                                type="email"
-                                placeholder="john@example.com"
-                              />
+                              <Input {...field} type="email" placeholder="john@example.com" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -486,25 +339,15 @@ export default function MentorProfileForm({
                           <FormItem>
                             <FormLabel>Phone Number</FormLabel>
                             <FormControl>
-                              <Input
-                                {...field}
-                                type="tel"
-                                placeholder="9876543210"
-                                maxLength={10}
-                              />
+                              <Input {...field} type="tel" placeholder="9876543210" maxLength={10} />
                             </FormControl>
-                            <p className="text-xs text-muted-foreground">
-                              10-digit mobile number
-                            </p>
+                            <p className="text-xs text-muted-foreground">10-digit mobile number</p>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      <DatePickerWithYear
-                        form={form}
-                        name={`dob`}
-                        label="Date of Birth"
-                      />
+
+                      <DatePickerWithYear form={form} name="dob" label="Date of Birth" />
 
                       <FormField
                         control={form.control}
@@ -512,10 +355,7 @@ export default function MentorProfileForm({
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Gender</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Select gender" />
@@ -525,9 +365,7 @@ export default function MentorProfileForm({
                                 <SelectItem value="male">Male</SelectItem>
                                 <SelectItem value="female">Female</SelectItem>
                                 <SelectItem value="other">Other</SelectItem>
-                                <SelectItem value="prefer-not-to-say">
-                                  Prefer not to say
-                                </SelectItem>
+                                <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -541,10 +379,7 @@ export default function MentorProfileForm({
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Primary Expertise</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Select your field" />
@@ -586,11 +421,21 @@ export default function MentorProfileForm({
                   </div>
                 </div>
 
+                {/* Time Slots Section */}
+                <div className="bg-primary/5 p-4 rounded-lg">
+                  <h3 className="text-lg font-medium mb-4 flex items-center">
+                    <Clock className="h-5 w-5 mr-2" /> Available Time Slots
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Select your default available time slots. You can modify these later in your dashboard.
+                  </p>
+
+                  <TimeSlotSelector form={form} name="timeSlots" />
+                </div>
+
                 {/* Skills section */}
                 <div className="bg-secondary/10 p-4 rounded-lg">
-                  <h3 className="text-lg font-medium mb-4">
-                    Skills & Languages
-                  </h3>
+                  <h3 className="text-lg font-medium mb-4">Skills & Languages</h3>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Skills */}
                     <div>
@@ -619,21 +464,12 @@ export default function MentorProfileForm({
                                 <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-2">
                                   <FormControl>
                                     <Checkbox
-                                      checked={field.value?.some(
-                                        (s) => s.id === skill.id
-                                      )}
+                                      checked={field.value?.some((s) => s.id === skill.id)}
                                       onCheckedChange={(checked) => {
                                         if (checked) {
-                                          field.onChange([
-                                            ...(field.value || []),
-                                            skill,
-                                          ]);
+                                          field.onChange([...(field.value || []), skill])
                                         } else {
-                                          field.onChange(
-                                            field.value?.filter(
-                                              (s) => s.id !== skill.id
-                                            )
-                                          );
+                                          field.onChange(field.value?.filter((s) => s.id !== skill.id))
                                         }
                                       }}
                                     />
@@ -642,20 +478,15 @@ export default function MentorProfileForm({
                                   <TooltipProvider>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
-                                        <FormLabel className="font-normal cursor-pointer">
-                                          {skill.name}
-                                        </FormLabel>
+                                        <FormLabel className="font-normal cursor-pointer">{skill.name}</FormLabel>
                                       </TooltipTrigger>
                                       <TooltipContent>
-                                        <p>
-                                          {skill.description ??
-                                            "No description available"}
-                                        </p>
+                                        <p>{skill.description ?? "No description available"}</p>
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
                                 </FormItem>
-                              );
+                              )
                             }}
                           />
                         ))}
@@ -670,9 +501,7 @@ export default function MentorProfileForm({
                     {/* Languages */}
                     <div>
                       <FormLabel>Languages</FormLabel>
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Add languages you can mentor in
-                      </p>
+                      <p className="text-xs text-muted-foreground mb-2">Add languages you can mentor in</p>
                       <div className="flex flex-wrap gap-2 mb-2 min-h-12 max-h-24 overflow-y-auto p-2 bg-background/80 rounded-md">
                         {form.watch("languages").map((language, index) => (
                           <motion.div
@@ -688,12 +517,11 @@ export default function MentorProfileForm({
                               size="sm"
                               className="h-auto p-1 ml-1"
                               onClick={() => {
-                                const currentLanguages =
-                                  form.getValues("languages");
+                                const currentLanguages = form.getValues("languages")
                                 form.setValue(
                                   "languages",
-                                  currentLanguages.filter((_, i) => i !== index)
-                                );
+                                  currentLanguages.filter((_, i) => i !== index),
+                                )
                               }}
                             >
                               <X className="h-3 w-3" />
@@ -710,16 +538,12 @@ export default function MentorProfileForm({
                           onChange={(e) => setNewLanguage(e.target.value)}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
-                              e.preventDefault();
-                              handleAddLanguage();
+                              e.preventDefault()
+                              handleAddLanguage()
                             }
                           }}
                         />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={handleAddLanguage}
-                        >
+                        <Button type="button" variant="outline" onClick={handleAddLanguage}>
                           <Plus className="h-4 w-4 mr-1" /> Add
                         </Button>
                       </div>
@@ -743,8 +567,7 @@ export default function MentorProfileForm({
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          const currentExperiences =
-                            form.getValues("experiences");
+                          const currentExperiences = form.getValues("experiences")
                           form.setValue("experiences", [
                             ...currentExperiences,
                             {
@@ -754,7 +577,7 @@ export default function MentorProfileForm({
                               endDate: null,
                               description: "",
                             },
-                          ]);
+                          ])
                         }}
                       >
                         <Plus className="h-4 w-4 mr-1" /> Add Experience
@@ -778,10 +601,7 @@ export default function MentorProfileForm({
                                     <FormItem>
                                       <FormLabel>Role</FormLabel>
                                       <FormControl>
-                                        <Input
-                                          {...field}
-                                          placeholder="Senior Developer"
-                                        />
+                                        <Input {...field} placeholder="Senior Developer" />
                                       </FormControl>
                                       <FormMessage />
                                     </FormItem>
@@ -794,10 +614,7 @@ export default function MentorProfileForm({
                                     <FormItem>
                                       <FormLabel>Company</FormLabel>
                                       <FormControl>
-                                        <Input
-                                          {...field}
-                                          placeholder="Tech Company Inc."
-                                        />
+                                        <Input {...field} placeholder="Tech Company Inc." />
                                       </FormControl>
                                       <FormMessage />
                                     </FormItem>
@@ -844,14 +661,11 @@ export default function MentorProfileForm({
                                     variant="destructive"
                                     size="sm"
                                     onClick={() => {
-                                      const currentExperiences =
-                                        form.getValues("experiences");
+                                      const currentExperiences = form.getValues("experiences")
                                       form.setValue(
                                         "experiences",
-                                        currentExperiences.filter(
-                                          (_, i) => i !== index
-                                        )
-                                      );
+                                        currentExperiences.filter((_, i) => i !== index),
+                                      )
                                     }}
                                   >
                                     Remove
@@ -874,8 +688,7 @@ export default function MentorProfileForm({
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          const currentEducations =
-                            form.getValues("educations");
+                          const currentEducations = form.getValues("educations")
                           form.setValue("educations", [
                             ...currentEducations,
                             {
@@ -885,7 +698,7 @@ export default function MentorProfileForm({
                               endDate: null,
                               description: "",
                             },
-                          ]);
+                          ])
                         }}
                       >
                         <Plus className="h-4 w-4 mr-1" /> Add Education
@@ -909,10 +722,7 @@ export default function MentorProfileForm({
                                     <FormItem>
                                       <FormLabel>Degree</FormLabel>
                                       <FormControl>
-                                        <Input
-                                          {...field}
-                                          placeholder="B.Tech Computer Science"
-                                        />
+                                        <Input {...field} placeholder="B.Tech Computer Science" />
                                       </FormControl>
                                       <FormMessage />
                                     </FormItem>
@@ -925,10 +735,7 @@ export default function MentorProfileForm({
                                     <FormItem>
                                       <FormLabel>Institution</FormLabel>
                                       <FormControl>
-                                        <Input
-                                          {...field}
-                                          placeholder="University Name"
-                                        />
+                                        <Input {...field} placeholder="University Name" />
                                       </FormControl>
                                       <FormMessage />
                                     </FormItem>
@@ -975,14 +782,11 @@ export default function MentorProfileForm({
                                     variant="destructive"
                                     size="sm"
                                     onClick={() => {
-                                      const currentEducations =
-                                        form.getValues("educations");
+                                      const currentEducations = form.getValues("educations")
                                       form.setValue(
                                         "educations",
-                                        currentEducations.filter(
-                                          (_, i) => i !== index
-                                        )
-                                      );
+                                        currentEducations.filter((_, i) => i !== index),
+                                      )
                                     }}
                                   >
                                     Remove
@@ -1029,5 +833,6 @@ export default function MentorProfileForm({
         </Card>
       </motion.div>
     </div>
-  );
+  )
 }
+

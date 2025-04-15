@@ -3,6 +3,7 @@
 import { ValidationError } from "@/server/core/errors/errors";
 import { userService } from "@/server/services/user.service";
 import { verificationTokenService } from "@/server/services/verificationToken.service";
+import { UserManagementResponseMessages } from "@/server/shared/constants/constant";
 import {
   ErrorResponse,
   SuccessResponse,
@@ -21,12 +22,12 @@ export const SignUp_ServerAction = async (
     const validatedData = SignUpFormSchema.parse(formData);
 
     if (!validatedData) {
-      throw new ValidationError("Invalid input data");
+      throw new ValidationError(UserManagementResponseMessages.ErrorInvalidInputToSignUP);
     }
     const { email, name, password, confirmPassword } = validatedData;
 
     if (password !== confirmPassword) {
-      throw new ValidationError("Passwords Do Not Match");
+      throw new ValidationError(UserManagementResponseMessages.ErrorPasswordNotMatch);
     }
 //// stored user data in database
     const createdUser = await userService.registerUser({
@@ -35,18 +36,18 @@ export const SignUp_ServerAction = async (
       password,
     });
     if (!createdUser) {
-      throw new ValidationError("Failed to Signup the User ");
+      throw new ValidationError(UserManagementResponseMessages.ErrorFaliedToSignUp);
     }
 //// send email verification link
     const verification_token_Send_Or_Not =
       await verificationTokenService.createVerificationTokenAndSend(email);
 
     if (!verification_token_Send_Or_Not) {
-      throw new ValidationError("Failed to Send verification Link");
+      throw new ValidationError(UserManagementResponseMessages.ErrorFaliedToSendVerificationEmail);
     }
 
 
-    return SuccessResponse("Email Verification was sent");
+    return SuccessResponse(UserManagementResponseMessages.SuccessVerificationEmailSent(email), null);
 
   } catch (error) {
     if (error instanceof ValidationError) {
@@ -58,7 +59,7 @@ export const SignUp_ServerAction = async (
     return ErrorResponse(
       error instanceof Error
         ? error.message
-        : "An error occurred during sign-up"
+        : UserManagementResponseMessages.ErrorFaliedToSignUp
     );
   }
 };

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const RegisterMentorFormSchema = z.object({
-  name: z.string().trim().min(2, "Name must be at least 2 characters"),
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(50, "Name must be at most 50 characters"),
   email: z.string().trim().email("Please enter a valid email"),
   phone: z.string().trim().regex(/^\d{10}$/, "Phone number must be 10 digits"),
 
@@ -78,6 +78,15 @@ export const RegisterMentorFormSchema = z.object({
     ),
 
   languages: z.array(z.string().trim()).min(1, "Please add at least one language"),
+  timeSlots: z
+      .array(
+        z.object({
+          id: z.string(),
+          start: z.string(),
+          end: z.string(),
+        }),
+      )
+      .min(1, "Please select at least one time slot"),
 });
 
 export type RegisterMentorFormType = z.infer<typeof RegisterMentorFormSchema>;

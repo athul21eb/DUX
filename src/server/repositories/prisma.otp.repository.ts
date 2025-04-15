@@ -1,8 +1,13 @@
 import { prisma } from "@/lib/db/database";
 import { Otp } from "../core/entities/otp";
 import { IOtpRepository } from "../core/interfaces/otp.repository.interface";
+import { BaseRepository } from "./prisma.BaseRepository";
 
-export class PrismaOtpRepositoryImpl implements IOtpRepository {
+export class PrismaOtpRepositoryImpl extends BaseRepository<Otp> implements IOtpRepository {
+
+   constructor() {
+        super(prisma.oTP);  // Replace 'YourTimeSlotModel' with your actual time slot model
+      }
   async createOtp(email: string, token: string): Promise<Otp | null> {
     try {
       const otp = await prisma.oTP.create({

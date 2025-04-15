@@ -4,6 +4,7 @@ import { getAllApprovalsDTO, getAllMentorsDTO } from "@/server/core/dtos/mentorD
 
 import { ValidationError } from "@/server/core/errors/errors";
 import { mentorService } from "@/server/services/mentor.service";
+import { MentorMangementResponseMessages } from "@/server/shared/constants/constant";
 
 import {
   ErrorResponse,
@@ -31,12 +32,12 @@ export  const Get_All_Mentor_With_Pagination_Server_Action = async (
     };
 
 
-    return SuccessResponse("successfully fetched mentors ", presenter);
+    return SuccessResponse(MentorMangementResponseMessages.SuccessMentorsFetched, presenter);
   } catch (error) {
     if (error instanceof ValidationError) {
       return ErrorResponse(error.message);
     }
-    console.error(error, "error in get metor s server action");
-    return ErrorResponse(error instanceof Error ? error.message : "failed to fetch mentor s  data");
+    console.error(error, "error in get mentors server action");
+    return ErrorResponse(error instanceof Error ? error.message : MentorMangementResponseMessages.ErrorFailedToFetchMentors);
   }
 };

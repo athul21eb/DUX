@@ -2,8 +2,13 @@ import { createSkillDTO } from "../core/dtos/skillDtos";
 import { Skill } from "../core/entities/skill";
 import { ISkillRepository } from "../core/interfaces/skill.repository.interface";
 import { prisma } from "@/lib/db/database";
+import { BaseRepository } from "./prisma.BaseRepository";
 
-export class PrismaSkillRepository implements ISkillRepository {
+export class PrismaSkillRepository extends BaseRepository<Skill> implements ISkillRepository {
+
+   constructor() {
+        super(prisma.skill);  // Replace 'YourTimeSlotModel' with your actual time slot model
+      }
   async create(skill: createSkillDTO): Promise<Skill> {
     const createdSkill = await prisma.skill.create({
       data: {

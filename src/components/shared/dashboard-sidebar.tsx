@@ -60,7 +60,8 @@ const mentorNavItems: NavItem[] = [
   { title: "Sessions", href: "/mentor/sessions", icon: Clock },
   { title: "Chats", href: "/mentor/chats", icon: MessageSquare },
   { title: "Change Password", href: "/mentor/change-password", icon: Key },
-  { title: "Wallet", href: "/mentor/earnings", icon: Wallet },
+  { title: "Wallet", href: "/mentor/wallet", icon: Wallet },
+  { title: "Slots Management", href: "/mentor/slot-management", icon: Clock },
 ];
 
 const adminNavItems: NavItem[] = [

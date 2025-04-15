@@ -84,9 +84,10 @@ model Mentor {
   expertise    String
   experiences Experience[]
   educations  Education[]
-  languages   String[]  
+  languages   String[]
   hourlyRate  Int
   verified    VerificationStatus  @default(pending)
+  timeSlots   TimeSlot[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -95,6 +96,22 @@ enum VerificationStatus {
   verified
   rejected
 }
+model TimeSlot {
+  id        String   @id @default(uuid())
+  mentorId  String
+  date      DateTime? // Specific date for the slot
+  startTime String   // Start time of the slot
+  endTime   String   // End time of the slot
+  isBooked  Boolean  @default(false)
+
+  mentor    Mentor   @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([mentorId, date, startTime, endTime]) // Prevent duplicate slots for the same mentor
+}
+
 
 model Experience {
   id          String   @id @default(uuid())
@@ -142,19 +159,4 @@ model MentorSkill {
 }
 
 
-// model Booking {
-//   id         String   @id @default(uuid())
-//   mentorId   String
-//   userId     String
-//   date       DateTime
-//   duration   Int      // Duration in minutes
-//   status     String   @default("pending") // 'pending', 'confirmed', 'canceled', 'completed'
-//   createdAt  DateTime @default(now())
-//   updatedAt  DateTime @updatedAt
 
-//   mentor     Mentor   @relation(fields: [mentorId], references: [id], onDelete: Cascade)
-//   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-//   @@index([mentorId])
-//   @@index([userId])
-// }
