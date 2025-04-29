@@ -4,7 +4,7 @@ export class BaseRepository<T> implements IBaseRepository<T> {
   constructor(protected model: any) {}
 
   async create(data: Partial<T>): Promise<T> {
-    return this.model.create({ data });
+    return this.model.create( {data} );
   }
 
   async findById(id: string): Promise<T | null> {

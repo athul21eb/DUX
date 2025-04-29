@@ -10,12 +10,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link } from "next-view-transitions";
+import { Link, useTransitionRouter } from "next-view-transitions";
 import toast from "react-hot-toast";
 
 export function UserNav() {
   const { data: session, status } = useSession();
 
+  const router = useTransitionRouter();
   if (status === "loading") {
     return <div className="h-10 w-10 animate-pulse rounded-full bg-gray-300" />;
   }
@@ -33,6 +34,9 @@ export function UserNav() {
         id: toastId,
         duration: 2000,
       });
+
+      router.push("/"); // Redirect to login page after logout
+      router.refresh(); // Refresh the page to ensure session state is updated
     } catch (error) {
       toast.error("Error logging out!", { id: toastId, duration: 3000 });
     }

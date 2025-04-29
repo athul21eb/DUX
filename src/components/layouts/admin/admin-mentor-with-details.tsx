@@ -34,13 +34,13 @@ import { MentorsWithRelations } from "@/server/core/dtos/mentorDtos";
 import toast from "react-hot-toast";
 import { Admin_Approve_Or_Reject_Mentor_Approval_Server_Action } from "@/server/actions/admin/mentorsManagement/approve-or-reject-mentor-approval.server-action";
 import { useTransitionRouter } from "next-view-transitions";
-
+import { useSession } from "next-auth/react";
 
 interface ApprovalClientProps {
   mentor: MentorsWithRelations;
   mentorId: string;
   approvalOrNot?: boolean;
-  adminOrNot?:boolean
+  adminOrNot?: boolean;
 }
 
 const formatDate = (date: Date | null | undefined) => {
@@ -55,12 +55,12 @@ export function MentorDetailsClient({
   mentor,
   mentorId,
   approvalOrNot = true,
-  adminOrNot=true,
+  adminOrNot = true,
 }: ApprovalClientProps) {
   const [currentDocIndex, setCurrentDocIndex] = useState(0);
   const [numPages, setNumPages] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
+  const session = useSession();
   const router = useTransitionRouter();
   const handleApproveOrReject = async (status: string) => {
     setIsLoading(true);
@@ -72,10 +72,9 @@ export function MentorDetailsClient({
 
       if (!res.success) {
         toast.error(res.message);
-
       } else {
         toast.success(res.message);
-        router.replace("/admin/mentors")
+        router.replace("/admin/mentors");
       }
     } catch (error) {
       toast.error("Failed to change mentor status");
@@ -83,9 +82,6 @@ export function MentorDetailsClient({
       setIsLoading(false); // Ensures loading state is reset no matter what
     }
   };
-
-
-
 
   return (
     <motion.div
@@ -133,7 +129,7 @@ export function MentorDetailsClient({
                 </div>
               </div>
             </div>
-            {(approvalOrNot )&& (
+            {approvalOrNot && (
               <div className="flex flex-col sm:flex-row gap-2">
                 <Button
                   variant="default"
@@ -152,13 +148,24 @@ export function MentorDetailsClient({
               </div>
             )}
 
-            { !adminOrNot&& <Button
-                  variant="default"
-                  onClick={() => {}}
+            {!adminOrNot && (
+              <Button
+                variant="default"
+                onClick={() => {
+                  console.log(session)
+                  if (session?.status==="unauthenticated" ||session?.data?.user?.role!=="user") {
+                    toast.error("Please login as user to book a session");
+                     router.push(`/signup`);
+                  }else{
+                    router.push(`/mentors/${mentorId}/booking`);
+                  }
 
-                >
-                  Book now 
-                </Button>}
+
+                }}
+              >
+                Book now
+              </Button>
+            )}
           </div>
         </CardHeader>
       </Card>
@@ -169,7 +176,11 @@ export function MentorDetailsClient({
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="experience">Experience</TabsTrigger>
           <TabsTrigger value="education">Education</TabsTrigger>
-          {adminOrNot?<TabsTrigger value="documents">Documents</TabsTrigger>:<TabsTrigger value="reviews">Reviews</TabsTrigger>}
+          {adminOrNot ? (
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+          ) : (
+            <TabsTrigger value="reviews">Reviews</TabsTrigger>
+          )}
         </TabsList>
 
         {/* Profile Tab */}
@@ -183,40 +194,44 @@ export function MentorDetailsClient({
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Contact Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p>{mentor.profile?.email}</p>
+          {adminOrNot && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Contact Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Email</p>
+                    <p>{mentor.profile?.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Phone</p>
+                    <p>{mentor.profile?.phone || "Not provided"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Gender</p>
+                    <p>
+                      {mentor.profile?.gender
+                        ? mentor.profile.gender.charAt(0).toUpperCase() +
+                          mentor.profile.gender.slice(1)
+                        : "Not provided"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Date of Birth
+                    </p>
+                    <p>
+                      {mentor.profile?.dob
+                        ? formatDate(mentor.profile.dob)
+                        : "Not provided"}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Phone</p>
-                  <p>{mentor.profile?.phone || "Not provided"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Gender</p>
-                  <p>
-                    {mentor.profile?.gender
-                      ? mentor.profile.gender.charAt(0).toUpperCase() +
-                        mentor.profile.gender.slice(1)
-                      : "Not provided"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Date of Birth</p>
-                  <p>
-                    {mentor.profile?.dob
-                      ? formatDate(mentor.profile.dob)
-                      : "Not provided"}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>
@@ -357,11 +372,9 @@ export function MentorDetailsClient({
               </CardTitle>
             </CardHeader>
             <CardContent>
-
-                <p className="text-muted-foreground">
-                  No reviews information provided.
-                </p>
-
+              <p className="text-muted-foreground">
+                No reviews information provided.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>

@@ -115,3 +115,27 @@ export const UserManagementResponseMessages = {
 
 
 }
+
+
+export const SlotManagementResponseMessages = {
+ //// Error Messages
+  ErrorInvalidInputByIdIsRequired : "id is required",
+  ErrorInvalidInputByIdandDateAreRequired : "id and date are required",
+
+
+
+  ErrorMentorProfileNotfound : "mentor profile not found",
+  ErrorDefaultTimeSlotsNotFound : "default time slots not found",
+  ErrorTimeSlotsNotFoundByDate :(date:string)=> ` time slots not found on  ${date}`,
+
+  ErrorFailedToFetchTimeSlots : "failed to fetch time slots",
+   ErrorFailedToUpdateTimeSlots : "failed to update time slots",
+
+
+
+  //// Success Messages
+
+  SuccessDefaultTimeSlotsFetched : "successfully fetched default time slots",
+  SuccessTimeSlotsFetchedByDate :(date:string) =>`successfully fetched  time slots on ${date}`,
+  SuccessTimeSlotsUpdatedByDate :(date:string) =>`successfully updated  time slots on ${date}`,
+}

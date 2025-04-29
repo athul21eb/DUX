@@ -13,7 +13,7 @@ export interface createUserDTO {
 
 
 }
-export type Gender = "Male" | "Female" | "Other" | undefined;
+export type Gender = "male"| "female"| "other"| "prefer-not-to-say"| undefined;
 
 export interface updateUserDTO {
 

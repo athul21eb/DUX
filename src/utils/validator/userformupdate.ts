@@ -22,7 +22,7 @@ export const UserSchema = z.object({
     ),
 
 
-  gender: z.enum(["Male", "Female", "Other"]).optional(),
+  gender: z.enum(["male", "female", "other", "prefer-not-to-say"]).optional(),
 
   dob: z
     .union([z.date(), z.string().transform((str) => new Date(str))])

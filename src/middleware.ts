@@ -12,6 +12,7 @@ const protectedRoutes: Record<string, string> = {
   "/mentor": "mentor",
   "/user": "user",
   "/admin": "admin",
+
 };
 
 // Function to check role access
@@ -71,6 +72,12 @@ export default auth(async (req: NextRequest) => {
   // if (pathname === "/register-as-mentor" && role !== "user") {
   //   return NextResponse.redirect(new URL("/login", req.nextUrl));
   // }
+
+  // if(pathname.includes("/booking") && role !== "user") {
+
+  //   return NextResponse.redirect(new URL("/", req.nextUrl));
+  // }
+
 
   if (!hasAccess(pathname, role)) {
     return NextResponse.redirect(new URL("/login", req.nextUrl));

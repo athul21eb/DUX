@@ -4,7 +4,7 @@ import { ITimeSlot } from "@/server/core/entities/timeSlot";
 import { ValidationError } from "@/server/core/errors/errors";
 import { mentorService } from "@/server/services/mentor.service";
 import { timeSlotService } from "@/server/services/timeSlot.service";
-import {  SlotManagementResponseMessages } from "@/server/shared/constants/constant";
+import { SlotManagementResponseMessages } from "@/server/shared/constants/constant";
 import {
   ErrorResponse,
   SuccessResponse,
@@ -12,7 +12,7 @@ import {
   TSuccessResponse,
 } from "@/utils/serverActionResponses/serverActionResponses";
 
-interface slots  {
+interface presenter  {
 
   id:string;
   start:string;
@@ -21,47 +21,38 @@ interface slots  {
 
 }
 
-interface presenter {
-  mentorId: string;
-  slots: slots[];
-}
-
-
-
-export const Default_TimeSlots_Server_Action = async (
-  id: string
-): Promise<TSuccessResponse<presenter> | TErrorResponse> => {
+export const Fetch_TimeSlots_By_Date_With_IsBooked_Server_Action = async (
+  id: string,date:string
+): Promise<TSuccessResponse<presenter[]|null> | TErrorResponse> => {
   try {
-    if (!id) {
-      throw new ValidationError(SlotManagementResponseMessages.ErrorInvalidInputByIdIsRequired);
+    if (!id&&!date) {
+      throw new ValidationError(SlotManagementResponseMessages.ErrorInvalidInputByIdandDateAreRequired);
     }
-
-    const mentor = await mentorService.getMentorDetailsByUserId(id);
+  const mentor = await mentorService.getMentorDetailsById(id);
 
     if (!mentor) {
       throw new ValidationError(SlotManagementResponseMessages.ErrorMentorProfileNotfound);
     }
 
-    const defaultTimeSlots = await timeSlotService.getDefaultTimeSlots(
-      mentor.id
-    );
+    const TimeSlots = await timeSlotService.getSelectedDayTimeSlots(mentor.id,new Date(date) );
 
-    if (!defaultTimeSlots) {
-      throw new ValidationError(SlotManagementResponseMessages.ErrorDefaultTimeSlotsNotFound);
+
+    if (!TimeSlots||!TimeSlots?.length) {
+      throw new ValidationError(SlotManagementResponseMessages.ErrorTimeSlotsNotFoundByDate(date));
     }
 
-    const formattedTimeSlots:slots[] = defaultTimeSlots.map((slot) => ({
+    const formattedTimeSlots:presenter[] = TimeSlots.map((slot) => ({
       id: slot.id as string,
       start: slot.startTime as string ,
       end: slot.endTime as string,
-      isBooked: slot.isBooked as boolean,
+      isBooked:slot.isBooked as boolean
     }));
 
 
 
     return SuccessResponse(
-      SlotManagementResponseMessages.SuccessDefaultTimeSlotsFetched,
-      {slots:formattedTimeSlots,mentorId:mentor.id} as presenter
+      SlotManagementResponseMessages.SuccessTimeSlotsFetchedByDate(date),
+      formattedTimeSlots
     );
 
 

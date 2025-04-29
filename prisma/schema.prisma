@@ -29,6 +29,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   accounts      Account[]
   mentorProfile Mentor?
+  bookings      Booking[]
 
   @@index([email])
 
@@ -88,6 +89,7 @@ model Mentor {
   hourlyRate  Int
   verified    VerificationStatus  @default(pending)
   timeSlots   TimeSlot[]
+  bookings      Booking[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -105,10 +107,11 @@ model TimeSlot {
   isBooked  Boolean  @default(false)
 
   mentor    Mentor   @relation(fields: [mentorId], references: [id], onDelete: Cascade)
-
+booking   Booking?  // Relation to the booking
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+ @@index([date])
   @@unique([mentorId, date, startTime, endTime]) // Prevent duplicate slots for the same mentor
 }
 
@@ -159,4 +162,34 @@ model MentorSkill {
 }
 
 
+
+model Booking {
+  id          String   @id @default(uuid())
+  userId      String   // User who booked the session
+  timeSlotId  String   @unique // One-to-one with TimeSlot
+  mentorId    String   // For easier querying
+  status      BookingStatus @default(pending)
+
+  paymentId   String?  // Reference to payment if applicable
+  
+  paymentAmount String
+
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timeSlot    TimeSlot @relation(fields: [timeSlotId], references: [id], onDelete: Cascade)
+  mentor      Mentor   @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([mentorId])
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  canceled
+  completed
+}
 
