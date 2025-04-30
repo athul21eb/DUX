@@ -1,37 +1,27 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import BookingManagementClient from "@/components/shared/user-bookings-management";
+import { Get_All_Bookings_With_Pagination_Server_Action } from "@/server/actions/user/bookingManagement/get-all-bookings.server-action";
 
-const mockSessions = [
-  { id: 1, device: "Chrome on Windows", lastActive: "2023-05-01 14:30" },
-  { id: 2, device: "Safari on iPhone", lastActive: "2023-05-02 09:15" },
-  { id: 3, device: "Firefox on MacOS", lastActive: "2023-05-03 18:45" },
-]
+async function BookingsManagementPage() {
+  // Get initial bookings from the server
+  console.log("Bookings page rendered");
+  const itemsPerPage = 10;
+  const initialData = await Get_All_Bookings_With_Pagination_Server_Action(1, itemsPerPage); // Fetching the first page of bookings
 
-export default function SessionsPage() {
+  if (!initialData.success) return <div>Failed to Fetch Bookings: {initialData.message}</div>;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Active Sessions</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Device</TableHead>
-              <TableHead>Last Active</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {mockSessions.map((session) => (
-              <TableRow key={session.id}>
-                <TableCell>{session.device}</TableCell>
-                <TableCell>{session.lastActive}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  )
+    <div>
+      {initialData.data && (
+        <BookingManagementClient
+          bookings={initialData.data.bookings}
+          totalPages={initialData.data.totalPages}
+          currentPage={initialData.data.currentPage}
+          totalCount={initialData.data.totalCount}
+          itemsPerPage={itemsPerPage}
+        />
+      )}
+    </div>
+  );
 }
 
+export default BookingsManagementPage;

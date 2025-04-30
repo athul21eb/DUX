@@ -50,6 +50,9 @@ export default auth(async (req: NextRequest) => {
   if (pathname.startsWith("/api/auth")) {
     return NextResponse.next();
   }
+  if (pathname.startsWith("/api/stripe")) {
+    return NextResponse.next();
+  }
 
   if (tokenError === "RefreshAccessTokenError") {
     // Clear cookies
@@ -73,10 +76,10 @@ export default auth(async (req: NextRequest) => {
   //   return NextResponse.redirect(new URL("/login", req.nextUrl));
   // }
 
-  // if(pathname.includes("/booking") && role !== "user") {
+  if(pathname.includes("/booking") && role !== "user") {
 
-  //   return NextResponse.redirect(new URL("/", req.nextUrl));
-  // }
+    return NextResponse.redirect(new URL("/", req.nextUrl));
+  }
 
 
   if (!hasAccess(pathname, role)) {

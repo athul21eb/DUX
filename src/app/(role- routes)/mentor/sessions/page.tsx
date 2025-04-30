@@ -1,37 +1,53 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import MentorSessionManagementClient from '@/components/shared/mentor-bookings-management';
+import { auth } from '@/lib/auth/auth';
+import { prisma } from '@/lib/db/database';
+import { Get_Mentor_Bookings_With_Pagination_Server_Action } from '@/server/actions/mentor/sessionsMangement/server-actions';
+import { redirect } from 'next/navigation';
 
-const mockSessions = [
-  { id: 1, device: "Chrome on Windows", lastActive: "2023-05-01 14:30" },
-  { id: 2, device: "Safari on iPhone", lastActive: "2023-05-02 09:15" },
-  { id: 3, device: "Firefox on MacOS", lastActive: "2023-05-03 18:45" },
-]
+async function MentorSessionsPage() {
+  // Get current user session
+  const session = await auth();
 
-export default function SessionsPage() {
+  if (!session?.user) {
+    redirect('/login?callbackUrl=/dashboard/mentoring/sessions');
+  }
+
+  // Verify user is a mentor
+  const mentorProfile = await prisma.mentor.findUnique({
+    where: { userId: session.user.id },
+  });
+
+  if (!mentorProfile) {
+    redirect('/dashboard'); // Redirect to dashboard if not a mentor
+  }
+
+  // Get initial sessions from the server
+  const itemsPerPage = 10;
+  const initialData = await Get_Mentor_Bookings_With_Pagination_Server_Action(1, itemsPerPage);
+
+  if (!initialData.success) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 p-4 rounded-md text-red-700">
+          Failed to Fetch Sessions: {initialData.message}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Active Sessions</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Device</TableHead>
-              <TableHead>Last Active</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {mockSessions.map((session) => (
-              <TableRow key={session.id}>
-                <TableCell>{session.device}</TableCell>
-                <TableCell>{session.lastActive}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  )
+    <div>
+      {initialData.data && (
+        <MentorSessionManagementClient
+          bookings={initialData.data.bookings}
+          totalPages={initialData.data.totalPages}
+          currentPage={initialData.data.currentPage}
+          totalCount={initialData.data.totalCount}
+          itemsPerPage={itemsPerPage}
+        />
+      )}
+    </div>
+  );
 }
 
+export default MentorSessionsPage;

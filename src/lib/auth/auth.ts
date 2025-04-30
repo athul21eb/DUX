@@ -23,9 +23,17 @@ export const {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         try {
-          const existingUser = await userService.getUserDetailsByEmail(
-            user.email ?? ""
-          );
+          let existingUser;
+
+
+          try {
+            existingUser = await userService.getUserDetailsByEmail(
+              user.email ?? ""
+            );
+          } catch (error) {
+            return true;
+          }
+
 
           if (existingUser) {
             if (!existingUser.emailVerified && existingUser.role === "mentor") {
@@ -68,11 +76,7 @@ export const {
       return true;
     },
 
-
     async jwt({ token }) {
-
-
-
       // if (process.env.NODE_ENV === "development") {
       //   console.log(
       //     "token info:",
@@ -102,33 +106,30 @@ export const {
           token.accessToken = accessToken;
           token.expires_at = expires_at; // Make sure to set this
         } catch (error) {
-           console.error("Initial token issuance failed:", error);
+          console.error("Initial token issuance failed:", error);
           token.error = "RefreshAccessTokenError";
           return token;
         }
       }
 
+      // Token refresh when expired
+      if (token.expires_at && Date.now() > token.expires_at) {
+        try {
+          const refreshedTokens = await refreshAccessToken();
 
+          if (!refreshedTokens) {
+            throw new Error("Failed to refresh token");
+          }
 
-   // Token refresh when expired
-   if (token.expires_at && Date.now() > token.expires_at) {
-    try {
-      const refreshedTokens = await refreshAccessToken();
-
-      if (!refreshedTokens) {
-        throw new Error("Failed to refresh token");
+          token.accessToken = refreshedTokens.access_token;
+          token.expires_at = refreshedTokens.expires_at;
+          token.error = undefined;
+        } catch (error) {
+          console.error("Token refresh failed:", error);
+          token.error = "RefreshAccessTokenError";
+          return token;
+        }
       }
-
-      token.accessToken = refreshedTokens.access_token;
-      token.expires_at = refreshedTokens.expires_at;
-      token.error = undefined;
-    } catch (error) {
-      console.error("Token refresh failed:", error);
-      token.error = "RefreshAccessTokenError";
-      return token;
-    }
-  }
-
 
       token.name = existingUser.name;
       token.email = existingUser.email;
@@ -141,9 +142,6 @@ export const {
     },
 
     async session({ token, session }) {
-
-
-
       return {
         ...session,
         user: {
@@ -162,6 +160,8 @@ export const {
       await logout();
     },
   },
+ 
+
   session: {
     strategy: "jwt",
     maxAge: 7 * 24 * 60 * 60, // 7 days

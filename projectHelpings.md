@@ -19,7 +19,7 @@ import { ErrorResponse, SuccessResponse, TErrorResponse, TSuccessResponse } from
 
 
 
-const _Server_Action = async():Promise<TSuccessResponse<null>|TErrorResponse>=>{
+export const _Server_Action = async():Promise<TSuccessResponse<null>|TErrorResponse>=>{
 
 
   try {

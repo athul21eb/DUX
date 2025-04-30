@@ -3,7 +3,10 @@ import { z } from "zod";
 export const RegisterMentorFormSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters").max(50, "Name must be at most 50 characters"),
   email: z.string().trim().email("Please enter a valid email"),
-  phone: z.string().trim().regex(/^\d{10}$/, "Phone number must be 10 digits"),
+  phone: z
+  .string()
+  .trim()
+  .regex(/^[6-9]\d{9}$/, "Phone number must be a valid 10-digit Indian mobile number"),
 
   dob: z.date({
     required_error: "Date of birth is required",

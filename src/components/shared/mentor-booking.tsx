@@ -27,6 +27,8 @@ import toast from "react-hot-toast";
 import { useTransitionRouter } from "next-view-transitions";
 import { Fetch_TimeSlots_By_Date_With_IsBooked_Server_Action } from "@/server/actions/user/bookingManagement/fetch-timeSlots-by-date.server-action";
 import { useSession } from "next-auth/react";
+import { create_stripe_checkout_Server_Action } from "@/server/actions/user/bookingManagement/book-session.server-action";
+import { Fetch_Bookings_By_Date_Server_Action } from "@/server/actions/user/bookingManagement/fetch-bookings-by-date.server-action";
 
 interface Slot {
   id: string;
@@ -75,6 +77,7 @@ export default function MentorBooking({
   const [selectedDate, setSelectedDate] = useState<Date>(next7Days[0]);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
   const [availableSlots, setAvailableSlots] = useState<Slot[]>(initialSlots);
+  const [defaultSlots, setDefaultSlots] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isBooking, setIsBooking] = useState<boolean>(false);
   const { data } = useSession();
@@ -95,8 +98,10 @@ export default function MentorBooking({
         console.log(response);
         if (response.success && response.data) {
           setAvailableSlots(response.data);
+          setDefaultSlots(false);
         } else {
           setAvailableSlots(initialSlots);
+          setDefaultSlots(true);
         }
 
         setSelectedSlot(null); // Reset selection when date changes
@@ -118,28 +123,35 @@ export default function MentorBooking({
     setIsBooking(true);
     try {
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
-      const success = await bookMentorSession(
+      const res = await create_stripe_checkout_Server_Action(
         mentor.id,
-        formattedDate,
         selectedSlot.id,
-        data?.user?.id as string
+        formattedDate,
+        data?.user?.id as string,
+        defaultSlots,
+        initialSlots.map((slot) => ({
+          start: slot.start,
+          end: slot.end,
+        }))
       );
 
-      if (success) {
-        toast.success(
-          "Booking Successful"
-          // description: `Your session with ${mentor.name} on ${format(
-          //   selectedDate,
-          //   "MMMM d"
-          // )} at ${selectedSlot.start} has been booked.`,
-        );
+      if (res.success) {
+        // Redirect to Stripe checkout
+        window.location.href = res.data.sessionUrl;
+        //   toast.success(
+        //     "Booking Successful"
+        //     // description: `Your session with ${mentor.name} on ${format(
+        //     //   selectedDate,
+        //     //   "MMMM d"
+        //     // )} at ${selectedSlot.start} has been booked.`,
+        //   );
 
-        // Update the slot as booked
-        setAvailableSlots((prev) =>
-          prev.map((slot) =>
-            slot.id === selectedSlot.id ? { ...slot, isBooked: true } : slot
-          )
-        );
+        //   // Update the slot as booked
+        //   setAvailableSlots((prev) =>
+        //     prev.map((slot) =>
+        //       slot.id === selectedSlot.id ? { ...slot, isBooked: true } : slot
+        //     )
+        //   );
         setSelectedSlot(null);
       } else {
         toast.error("Unable to book this session. Please try again.");

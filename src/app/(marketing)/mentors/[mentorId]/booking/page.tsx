@@ -73,6 +73,7 @@ const transformSlotsData = (data: any): Slot[] => {
   // Return empty array if format doesn't match
   return [];
 };
+
 export const revalidate = 0;
 
 async function MentorBookingPage({ params }: MentorParams) {
@@ -121,8 +122,8 @@ async function MentorBookingPage({ params }: MentorParams) {
   const mentorData = transformMentorData(mentorResponse.data);
   const slotsData = transformSlotsData(initialSlotsResponse.data);
 
-  console.log(initialSlotsResponse.data, "initialSlotsResponse.data",mentorData);
-  console.log(mentorResponse.data, "mentorResponse.data",slotsData);
+  // console.log(initialSlotsResponse.data, "initialSlotsResponse.data",mentorData);
+  // console.log(mentorResponse.data, "mentorResponse.data",slotsData);
 
   return (
     <div className="container mx-auto px-4 py-8">

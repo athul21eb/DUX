@@ -7,18 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
- enum Role {
+enum Role {
   user
   mentor
   admin
 }
+
 model User {
   id            String    @id @default(cuid())
   name          String?
   email         String    @unique
   emailVerified DateTime?
   googleId      String?
-   isBlocked     Boolean   @default(false)  // Corrected the typo here
+  isBlocked     Boolean   @default(false)
   password      String?   @db.VarChar(72)
   image         String?
   dob           DateTime?
@@ -30,9 +31,9 @@ model User {
   accounts      Account[]
   mentorProfile Mentor?
   bookings      Booking[]
+  wallet        Wallet?   // Relation to user's wallet
 
   @@index([email])
-
 }
 
 model Account {
@@ -60,8 +61,8 @@ model VerificationToken {
   token   String
   expires DateTime
 
-@@index([email, token])
   @@unique([email, token])
+  @@index([email, token])
 }
 
 model OTP {
@@ -71,53 +72,54 @@ model OTP {
   createdAt DateTime @default(now())
   expiresAt DateTime
 
+  @@unique([email, token])
   @@index([email, token])
-   @@unique([email, token])
 }
 
 model Mentor {
-  id          String    @id @default(uuid())
-  userId      String    @unique
-  profile        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  skills      MentorSkill[]  // Many-to-Many relation through a junction table
+  id          String             @id @default(uuid())
+  userId      String             @unique
+  profile     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills      MentorSkill[] // Many-to-Many relation through a junction table
   documents   String[]
   aboutMe     String? // Short description or bio
-  expertise    String
+  expertise   String
   experiences Experience[]
   educations  Education[]
   languages   String[]
   hourlyRate  Int
-  verified    VerificationStatus  @default(pending)
+  verified    VerificationStatus @default(pending)
   timeSlots   TimeSlot[]
-  bookings      Booking[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  bookings    Booking[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
 }
+
 enum VerificationStatus {
   pending
   verified
   rejected
 }
+
 model TimeSlot {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   mentorId  String
   date      DateTime? // Specific date for the slot
-  startTime String   // Start time of the slot
-  endTime   String   // End time of the slot
-  isBooked  Boolean  @default(false)
+  startTime String // Start time of the slot
+  endTime   String // End time of the slot
+  isBooked  Boolean   @default(false)
 
-  mentor    Mentor   @relation(fields: [mentorId], references: [id], onDelete: Cascade)
-booking   Booking?  // Relation to the booking
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  mentor    Mentor    @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  booking   Booking[] // Relation to the booking
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
- @@index([date])
   @@unique([mentorId, date, startTime, endTime]) // Prevent duplicate slots for the same mentor
+  @@index([date])
 }
 
-
 model Experience {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   mentorId    String
   role        String
   company     String
@@ -129,7 +131,7 @@ model Experience {
 }
 
 model Education {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   mentorId    String
   degree      String
   institution String
@@ -139,9 +141,10 @@ model Education {
 
   mentor Mentor @relation(fields: [mentorId], references: [id], onDelete: Cascade)
 }
+
 model Skill {
-  id      String   @id @default(uuid())
-  name    String   @unique
+  id          String @id @default(uuid())
+  name        String @unique
   description String
 
   mentors MentorSkill[] // Relation through a junction table
@@ -155,32 +158,33 @@ model MentorSkill {
   mentorId String
   skillId  String
 
-  mentor   Mentor @relation(fields: [mentorId], references: [id], onDelete: Cascade)
-  skill    Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  mentor Mentor @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  skill  Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
   @@id([mentorId, skillId]) // Composite primary key
 }
 
-
-
 model Booking {
-  id          String   @id @default(uuid())
-  userId      String   // User who booked the session
-  timeSlotId  String   @unique // One-to-one with TimeSlot
-  mentorId    String   // For easier querying
-  status      BookingStatus @default(pending)
-
-  paymentId   String?  // Reference to payment if applicable
-  
+  id           String        @id @default(uuid())
+  userId       String // User who booked the session
+  timeSlotId   String // One-to-one with TimeSlot
+  mentorId     String // For easier querying
+  status       BookingStatus @default(pending)
+  paymentId    String? // Reference to payment if applicable
+  startTime    String
+  endTime      String
+  bookingDate  String
   paymentAmount String
 
+  // References to related transactions
+  transactions Transaction[] // New relation to transactions
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  timeSlot    TimeSlot @relation(fields: [timeSlotId], references: [id], onDelete: Cascade)
-  mentor      Mentor   @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timeSlot TimeSlot @relation(fields: [timeSlotId], references: [id], onDelete: Cascade)
+  mentor   Mentor   @relation(fields: [mentorId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([mentorId])
@@ -189,7 +193,54 @@ model Booking {
 enum BookingStatus {
   pending
   confirmed
+  failed
   canceled
   completed
 }
 
+enum TransactionType {
+  credit // Money coming in (payment received)
+  debit  // Money going out (refund)
+}
+
+enum TransactionStatus {
+  initiated
+  pending
+  success
+  failed
+}
+
+// Wallet model for financial transactions
+model Wallet {
+  id        String    @id @default(uuid())
+  userId    String    @unique
+  balance   Float     @default(0) // Current balance
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// Transaction model for tracking financial operations
+model Transaction {
+  id              String            @id @default(uuid())
+  transactionId   String            @unique // External transaction ID from payment gateway
+  paymentId       String?           // Reference to external payment ID if applicable
+  walletId        String
+  bookingId       String?           // Optional reference to related booking
+  description     String
+  amount          Float
+  type            TransactionType
+  status          TransactionStatus @default(pending)
+  date            DateTime          @default(now())
+
+  // Relations
+  wallet          Wallet            @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  booking         Booking?          @relation(fields: [bookingId], references: [id])
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([walletId])
+  @@index([bookingId])
+}

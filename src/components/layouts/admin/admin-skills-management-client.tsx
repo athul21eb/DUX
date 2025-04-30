@@ -10,7 +10,6 @@ import { Pencil, Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { createSkill, deleteSkill, getAllSkills, updateSkill } from "@/lib/actions/admin/skillsManagement/skillsManagementActions";
 import toast from "react-hot-toast";
 import ReusableTable from "../../shared/reusableTable";
 import PaginationComponent from "../../shared/reusablePagenation";

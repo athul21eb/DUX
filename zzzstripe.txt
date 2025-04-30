@@ -1,0 +1,345 @@
+// lib/stripe.ts
+import Stripe from 'stripe';
+
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('STRIPE_SECRET_KEY is not set');
+}
+
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2023-10-16', // Use the latest API version
+});
+
+// actions/booking.ts
+'use server'
+
+import { stripe } from '@/lib/stripe';
+import { prisma } from '@/lib/prisma';
+import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
+
+export async function createStripeCheckoutSession(
+  mentorId: string,
+  timeSlotId: string,
+  date: string,
+  userId: string
+) {
+  try {
+    // 1. Validate inputs
+    if (!mentorId || !timeSlotId || !date || !userId) {
+      throw new Error('Missing required parameters');
+    }
+
+    // 2. Get mentor and time slot details
+    const mentor = await prisma.mentor.findUnique({
+      where: { id: mentorId },
+      include: {
+        profile: true
+      }
+    });
+
+    if (!mentor) {
+      throw new Error('Mentor not found');
+    }
+
+    const timeSlot = await prisma.timeSlot.findUnique({
+      where: { id: timeSlotId }
+    });
+
+    if (!timeSlot) {
+      throw new Error('Time slot not found');
+    }
+
+    if (timeSlot.isBooked) {
+      throw new Error('This time slot is already booked');
+    }
+
+    // 3. Calculate session duration and format for display
+    const startTime = timeSlot.startTime;
+    const endTime = timeSlot.endTime;
+    const formattedDate = new Date(date).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    // 4. Create a new pending booking in the database
+    const booking = await prisma.booking.create({
+      data: {
+        userId: userId,
+        mentorId: mentorId,
+        timeSlotId: timeSlotId,
+        status: 'pending',
+        paymentAmount: mentor.hourlyRate.toString(), // Store as string to avoid precision issues
+      }
+    });
+
+    // 5. Create Stripe checkout session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `Mentoring Session with ${mentor.profile.name}`,
+              description: `${formattedDate} at ${startTime} - ${endTime}`,
+            },
+            unit_amount: mentor.hourlyRate * 100, // Convert to cents for Stripe
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        bookingId: booking.id,
+        mentorId: mentorId,
+        timeSlotId: timeSlotId,
+        userId: userId,
+      },
+      mode: 'payment',
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/bookings/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/mentors/${mentorId}?canceled=true`,
+    });
+
+    return { sessionId: session.id, sessionUrl: session.url };
+  } catch (error) {
+    console.error('Stripe checkout error:', error);
+    throw new Error('Failed to create checkout session');
+  }
+}
+
+// Handler for successful payments (webhook)
+export async function handleStripeWebhook(req: Request) {
+  const body = await req.text();
+  const signature = req.headers.get('stripe-signature') as string;
+
+  if (!signature || !process.env.STRIPE_WEBHOOK_SECRET) {
+    throw new Error('Missing Stripe webhook signature or secret');
+  }
+
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    console.error('Webhook signature verification failed', err);
+    throw new Error('Webhook signature verification failed');
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const bookingId = session.metadata?.bookingId;
+    const timeSlotId = session.metadata?.timeSlotId;
+
+    if (bookingId && timeSlotId) {
+      // Update booking status to confirmed
+      await prisma.booking.update({
+        where: { id: bookingId },
+        data: {
+          status: 'confirmed',
+          paymentId: session.payment_intent as string,
+        },
+      });
+
+      // Mark the time slot as booked
+      await prisma.timeSlot.update({
+        where: { id: timeSlotId },
+        data: { isBooked: true },
+      });
+
+      // Revalidate the booking and mentor pages
+      revalidatePath('/bookings');
+      revalidatePath(`/mentors/${session.metadata?.mentorId}`);
+    }
+  }
+
+  return new Response(JSON.stringify({ received: true }));
+}
+
+// Function to verify a checkout session status
+export async function verifyCheckoutSession(sessionId: string) {
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    if (session.payment_status === 'paid') {
+      return { success: true };
+    }
+
+    return { success: false };
+  } catch (error) {
+    console.error('Error verifying checkout session:', error);
+    return { success: false };
+  }
+}
+
+// components/BookingButton.tsx
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createStripeCheckoutSession } from '@/actions/booking';
+import { format } from 'date-fns';
+import { toast } from 'sonner'; // or your preferred toast library
+import { Button } from '@/components/ui/button'; // Assuming you use shadcn/ui or similar
+
+type TimeSlot = {
+  id: string;
+  startTime: string;
+  endTime: string;
+  isBooked: boolean;
+};
+
+type BookingButtonProps = {
+  mentorId: string;
+  selectedDate: Date;
+  selectedSlot: TimeSlot | null;
+  userId: string;
+  className?: string;
+};
+
+export default function BookingButton({
+  mentorId,
+  selectedDate,
+  selectedSlot,
+  userId,
+  className,
+}: BookingButtonProps) {
+  const [isBooking, setIsBooking] = useState(false);
+  const router = useRouter();
+
+  const handleBookSession = async () => {
+    if (!selectedSlot) {
+      toast.error("Please select a time slot");
+      return;
+    }
+
+    if (!userId) {
+      toast.error("Please sign in to book a session");
+      // Redirect to login or show login modal
+      return;
+    }
+
+    setIsBooking(true);
+
+    try {
+      const formattedDate = format(selectedDate, "yyyy-MM-dd");
+
+      // Call server action to create Stripe checkout session
+      const result = await createStripeCheckoutSession(
+        mentorId,
+        selectedSlot.id,
+        formattedDate,
+        userId
+      );
+
+      if (result && result.sessionUrl) {
+        // Redirect to Stripe checkout
+        window.location.href = result.sessionUrl;
+      } else {
+        toast.error("Unable to create checkout session. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error booking session:", error);
+      toast.error("Something went wrong while booking your session");
+    } finally {
+      setIsBooking(false);
+    }
+  };
+
+  return (
+    <Button
+      onClick={handleBookSession}
+      disabled={isBooking || !selectedSlot || selectedSlot.isBooked}
+      className={className}
+    >
+      {isBooking ? "Processing..." : "Book Session"}
+    </Button>
+  );
+}
+
+// pages/api/webhooks/stripe.ts (for API Routes) or app/api/webhooks/stripe/route.ts (for App Router)
+import { handleStripeWebhook } from '@/actions/booking';
+
+export async function POST(req: Request) {
+  try {
+    return await handleStripeWebhook(req);
+  } catch (error) {
+    console.error('Webhook error:', error);
+    return new Response('Webhook error', { status: 400 });
+  }
+}
+
+// app/bookings/success/page.tsx
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { verifyCheckoutSession } from '@/actions/booking';
+import { redirect } from 'next/navigation';
+
+export default function BookingSuccessPage() {
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get('session_id');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+
+  useEffect(() => {
+    if (!sessionId) {
+      redirect('/');
+      return;
+    }
+
+    const verifySession = async () => {
+      try {
+        const result = await verifyCheckoutSession(sessionId);
+        if (result.success) {
+          setStatus('success');
+        } else {
+          setStatus('error');
+        }
+      } catch (error) {
+        console.error('Error verifying session:', error);
+        setStatus('error');
+      }
+    };
+
+    verifySession();
+  }, [sessionId]);
+
+  if (status === 'loading') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <h1 className="text-2xl font-bold mb-4">Processing your booking...</h1>
+        <p>Please wait while we confirm your payment.</p>
+      </div>
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <h1 className="text-2xl font-bold mb-4 text-red-600">Booking Error</h1>
+        <p>There was a problem confirming your booking. Please contact support.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      <h1 className="text-2xl font-bold mb-4 text-green-600">Booking Confirmed!</h1>
+      <p>Your booking has been successfully processed.</p>
+      <p className="mt-4">You will receive a confirmation email shortly.</p>
+      <button
+        onClick={() => redirect('/bookings')}
+        className="mt-8 px-4 py-2 bg-blue-600 text-white rounded-md"
+      >
+        View My Bookings
+      </button>
+    </div>
+  );
+}
+
+give remainign frontend code

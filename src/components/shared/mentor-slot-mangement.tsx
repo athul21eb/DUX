@@ -34,6 +34,7 @@ export default function SlotManagement({
   const tomorrow = startOfTomorrow();
   const [date, setDate] = useState<Date>(tomorrow);
   const [isLoading, setIsLoading] = useState(false);
+  const [dateBooked, setDateBooked] = useState(false);
   const [defaultSlots, setDefaultSlots] =
     useState<TimeSlot[]>(defaultTimeSlots);
 
@@ -58,6 +59,11 @@ export default function SlotManagement({
 
         if (response.success && response.data) {
           form.setValue("timeSlots", response.data);
+          const anyBooked = response.data.some(
+            (slot: TimeSlot) => slot.isBooked
+          );
+          setDateBooked(anyBooked);
+          console.log("Any booked slots:", anyBooked);
         } else {
           // If no slots are found, use default slots
           form.setValue("timeSlots", defaultSlots);
@@ -77,6 +83,11 @@ export default function SlotManagement({
 
   // Handle form submission
   const onSubmit = async (values: SlotFormValues) => {
+
+    if (dateBooked) {
+      toast.error("This date is already booked");
+      return; // <- Add this
+    }
     setIsLoading(true);
     try {
       const formattedDate = format(date, "yyyy-MM-dd");
