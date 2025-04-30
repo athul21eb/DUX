@@ -134,6 +134,7 @@ export const create_stripe_checkout_Server_Action = async (
         bookingDate: date,
         mentorName: mentor.profile.name,
         mentorExpertise: mentor.expertise,
+        amount: mentor.hourlyRate.toString(), // Store as string to avoid precision issues
       },
       mode: "payment",
       success_url: `${process.env.NEXTAUTH_URL}/mentors/${mentorId}/booking/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -192,10 +193,16 @@ export async function handleStripeWebhook(req: Request) {
   const bookingId = session.metadata?.bookingId;
   const timeSlotId = session.metadata?.timeSlotId;
   const mentorId = session.metadata?.mentorId;
+  const paymentAmount = session.metadata?.amount;
 
   try {
     if (event.type === "checkout.session.completed") {
-      if (bookingId && timeSlotId) {
+      if (bookingId && timeSlotId && mentorId && paymentAmount) {
+        const amountFloat = parseFloat(paymentAmount);
+        const mentorShare = parseFloat((amountFloat * 0.95).toFixed(2)); // 95%
+        const transactionId = session.id; // or session.payment_intent as string
+
+        // Update booking status
         await prisma.booking.update({
           where: { id: bookingId },
           data: {
@@ -204,31 +211,61 @@ export async function handleStripeWebhook(req: Request) {
           },
         });
 
+        // Mark timeslot as booked
         await prisma.timeSlot.update({
           where: { id: timeSlotId },
           data: { isBooked: true },
         });
 
-        revalidatePath(`/mentors/${mentorId}/booking`);
-        revalidatePath(`/mentors/${mentorId}`);
-      }
-    }
-
-    // Handle cancel scenarios
-    if (
-      event.type === "checkout.session.expired" ||
-      event.type === "checkout.session.async_payment_failed"
-    ) {
-      if (bookingId && timeSlotId) {
-        await prisma.booking.delete({
-          where: { id: bookingId },
+        // Get the mentor's user ID
+        const mentor = await prisma.mentor.findUnique({
+          where: { id: mentorId },
+          include: { profile: true },
         });
 
-        await prisma.timeSlot.update({
-          where: { id: timeSlotId },
-          data: { isBooked: false },
-        });
+        const mentorUserId = mentor?.userId;
 
+        if (mentorUserId) {
+          // Ensure wallet exists
+          let wallet = await prisma.wallet.findUnique({
+            where: { userId: mentorUserId },
+          });
+
+          if (!wallet) {
+            wallet = await prisma.wallet.create({
+              data: {
+                userId: mentorUserId,
+                balance: 0,
+              },
+            });
+          }
+
+          // Create a transaction
+          await prisma.transaction.create({
+            data: {
+              transactionId,
+              paymentId: session.payment_intent as string,
+              walletId: wallet.id,
+              bookingId,
+              description: `Mentor payout for booking ${bookingId}`,
+              amount: mentorShare,
+              type: "credit",
+              status: "success",
+            },
+          });
+
+          // Update wallet balance
+          await prisma.wallet.update({
+            where: { id: wallet.id },
+            data: {
+              balance: {
+                increment: mentorShare,
+              },
+            },
+          });
+        }
+
+        // Revalidate paths
         revalidatePath(`/mentors/${mentorId}/booking`);
         revalidatePath(`/mentors/${mentorId}`);
       }

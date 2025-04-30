@@ -10,17 +10,21 @@ export class PrismaUserRepository extends BaseRepository<IUser> implements IUser
   constructor(){
     super(prisma.user)
   }
-  
   async createUser(user: createUserDTO): Promise<IUser> {
-
-
     return await prisma.user.create({
       data: {
         ...user,
         role: user.role as Role,
+        wallet: {
+          create: {}, // 👈 This ensures a wallet is created
+        },
+      },
+      include: {
+        wallet: true,
       },
     });
   }
+
 
   async getUserById(id: string): Promise<IUser | null> {
     return await prisma.user.findUnique({

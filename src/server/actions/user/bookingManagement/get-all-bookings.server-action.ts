@@ -125,14 +125,13 @@ export type CancelBookingResult = {
   success: boolean;
   message: string;
 };
-
 export const Cancel_Booking_Server_Action = async (
   bookingId: string
 ): Promise<CancelBookingResult> => {
   try {
-    // Find the booking first
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
+      include: { user: true, mentor: true },
     });
 
     if (!booking) {
@@ -142,42 +141,100 @@ export const Cancel_Booking_Server_Action = async (
       };
     }
 
-    // Check if booking can be cancelled (not already cancelled or completed)
-    if (booking.status === BookingStatus.canceled || booking.status === BookingStatus.completed) {
+    if (
+      booking.status === BookingStatus.canceled ||
+      booking.status === BookingStatus.completed
+    ) {
       return {
         success: false,
         message: `Booking cannot be cancelled because it is already ${booking.status}`,
       };
     }
 
-    // Update booking status to cancelled
-    await prisma.booking.update({
-      where: { id: bookingId },
-      data: { status: BookingStatus.canceled },
+    const paymentAmount = parseFloat(booking.paymentAmount || "0");
+    const mentorDeduction = paymentAmount * 0.95;
+
+    const userWallet = await prisma.wallet.findUnique({
+      where: { userId: booking.userId },
     });
 
-    // Update the time slot to be available again
-    await prisma.timeSlot.update({
-      where: { id: booking.timeSlotId },
-      data: { isBooked: false },
+    const mentorWallet = await prisma.wallet.findUnique({
+      where: { userId: booking.mentor.userId },
     });
 
-    // Revalidate the bookings page
-    revalidatePath("/admin/bookings");
+    if (!userWallet || !mentorWallet) {
+      return {
+        success: false,
+        message: "User or mentor wallet not found",
+      };
+    }
+
+    await prisma.$transaction([
+      prisma.booking.update({
+        where: { id: bookingId },
+        data: { status: BookingStatus.canceled },
+      }),
+
+      prisma.timeSlot.update({
+        where: { id: booking.timeSlotId },
+        data: { isBooked: false },
+      }),
+
+      prisma.wallet.update({
+        where: { id: userWallet.id },
+        data: {
+          balance: { increment: paymentAmount },
+        },
+      }),
+
+      prisma.wallet.update({
+        where: { id: mentorWallet.id },
+        data: {
+          balance: { decrement: mentorDeduction },
+        },
+      }),
+
+      prisma.transaction.create({
+        data: {
+          transactionId: crypto.randomUUID(), // Generate a unique ID for the transaction
+          walletId: userWallet.id,
+          bookingId: booking.id,
+          description: "Full refund for cancelled booking",
+          amount: paymentAmount,
+          type: "credit",
+          status: "success",
+        },
+      }),
+
+      prisma.transaction.create({
+        data: {
+          transactionId: crypto.randomUUID(), // Generate a unique ID for the transaction
+          walletId: mentorWallet.id,
+          bookingId: booking.id,
+          description: "Deducted 95% for cancelled booking",
+          amount: mentorDeduction,
+          type: "debit",
+          status: "success",
+        },
+      }),
+    ]);
+
+    revalidatePath("/admin/sessions");
     revalidatePath("/dashboard/bookings");
 
     return {
       success: true,
-      message: "Booking cancelled successfully",
+      message: "Booking cancelled. User refunded and mentor partially charged.",
     };
   } catch (error) {
-    console.error("Error cancelling booking:", error);
+    console.error("Error cancelling booking and handling funds:", error);
     return {
       success: false,
-      message: "Failed to cancel booking",
+      message: "Failed to cancel booking and process refund",
     };
   }
 };
+
 
 // // get-booking-by-id.server-action.ts
 // 'use server'

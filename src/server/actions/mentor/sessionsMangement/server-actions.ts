@@ -119,12 +119,10 @@ export type CancelSessionResult = {
   success: boolean;
   message: string;
 };
-
 export const Cancel_Mentor_Session_Server_Action = async (
   bookingId: string
 ): Promise<CancelSessionResult> => {
   try {
-    // Get current user session
     const session = await auth();
 
     if (!session?.user) {
@@ -134,7 +132,6 @@ export const Cancel_Mentor_Session_Server_Action = async (
       };
     }
 
-    // Find the mentor profile associated with the current user
     const mentorProfile = await prisma.mentor.findUnique({
       where: { userId: session.user.id },
     });
@@ -146,9 +143,9 @@ export const Cancel_Mentor_Session_Server_Action = async (
       };
     }
 
-    // Find the booking
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
+      include: { user: true, mentor: true },
     });
 
     if (!booking) {
@@ -158,7 +155,6 @@ export const Cancel_Mentor_Session_Server_Action = async (
       };
     }
 
-    // Verify that this booking belongs to the current mentor
     if (booking.mentorId !== mentorProfile.id) {
       return {
         success: false,
@@ -166,32 +162,89 @@ export const Cancel_Mentor_Session_Server_Action = async (
       };
     }
 
-    // Check if booking can be cancelled (not already cancelled or completed)
-    if (booking.status === BookingStatus.canceled || booking.status === BookingStatus.completed) {
+    if (
+      booking.status === BookingStatus.canceled ||
+      booking.status === BookingStatus.completed
+    ) {
       return {
         success: false,
         message: `Session cannot be cancelled because it is already ${booking.status}`,
       };
     }
 
-    // Update booking status to cancelled
-    await prisma.booking.update({
-      where: { id: bookingId },
-      data: { status: BookingStatus.canceled },
+    const paymentAmount = parseFloat(booking.paymentAmount || "0");
+    const mentorDeduction = paymentAmount * 0.95;
+
+    const userWallet = await prisma.wallet.findUnique({
+      where: { userId: booking.userId },
     });
 
-    // Update the time slot to be available again
-    await prisma.timeSlot.update({
-      where: { id: booking.timeSlotId },
-      data: { isBooked: false },
+    const mentorWallet = await prisma.wallet.findUnique({
+      where: { userId: booking.mentor.userId },
     });
 
-    // Revalidate the sessions page
-    revalidatePath("/dashboard/mentoring/sessions");
+    if (!userWallet || !mentorWallet) {
+      return {
+        success: false,
+        message: "User or mentor wallet not found",
+      };
+    }
+
+    await prisma.$transaction([
+      prisma.booking.update({
+        where: { id: bookingId },
+        data: { status: BookingStatus.canceled },
+      }),
+
+      prisma.timeSlot.update({
+        where: { id: booking.timeSlotId },
+        data: { isBooked: false },
+      }),
+
+      prisma.wallet.update({
+        where: { id: userWallet.id },
+        data: {
+          balance: { increment: paymentAmount },
+        },
+      }),
+
+      prisma.wallet.update({
+        where: { id: mentorWallet.id },
+        data: {
+          balance: { decrement: mentorDeduction },
+        },
+      }),
+
+      prisma.transaction.create({
+        data: {
+          transactionId: crypto.randomUUID(), // Generate a unique ID for the transaction
+          walletId: userWallet.id,
+          bookingId: booking.id,
+          description: "Full refund for cancelled session",
+          amount: paymentAmount,
+          type: "credit",
+          status: "success",
+        },
+      }),
+
+      prisma.transaction.create({
+        data: {
+          transactionId: crypto.randomUUID(), // Generate a unique ID for the transaction
+          walletId: mentorWallet.id,
+          bookingId: booking.id,
+          description: "95% deduction for cancelled session",
+          amount: mentorDeduction,
+          type: "debit",
+          status: "success",
+        },
+      }),
+    ]);
+
+    revalidatePath("/mentor/sessions");
 
     return {
       success: true,
-      message: "Session cancelled successfully",
+      message: "Session cancelled. User refunded and mentor partially charged.",
     };
   } catch (error) {
     console.error("Error cancelling session:", error);

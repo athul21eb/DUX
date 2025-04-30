@@ -85,7 +85,7 @@ export default function SlotManagement({
   const onSubmit = async (values: SlotFormValues) => {
 
     if (dateBooked) {
-      toast.error("This date is already booked");
+      toast.error("session already booked cannot change the slots");
       return; // <- Add this
     }
     setIsLoading(true);
