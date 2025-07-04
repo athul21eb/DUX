@@ -59,7 +59,7 @@ export class UserService implements IUserService {
   }
 
   ////------------------login User
-  async loginUser(data: loginUserDTO): Promise<IUser> {
+  async   loginUser(data: loginUserDTO): Promise<IUser> {
     try {
       const { email, password } = data;
 

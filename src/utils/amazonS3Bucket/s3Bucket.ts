@@ -7,6 +7,7 @@ const s3 = new S3Client({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
   },
+  
 });
 
 export async function uploadFileToS3(file: File): Promise<string | null> {
@@ -21,7 +22,7 @@ export async function uploadFileToS3(file: File): Promise<string | null> {
       Key: `uploads/${fileName}`,
       Body: buffer,
       ContentType: file.type,
-      ACL: "public-read" as ObjectCannedACL, 
+      ACL: "public-read" as ObjectCannedACL,
     };
 
     await s3.send(new PutObjectCommand(params));

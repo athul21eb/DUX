@@ -1,6 +1,12 @@
 
 
+export const DefaultResponseMessages = {
 
+  ErrorInvalidInputByParametersRequired :(params: Array<string>)=> {
+    return `Invalid input, ${params.join(", ")} are required`
+  },
+
+}
 
 export const MentorMangementResponseMessages = {
   //// Error Messages
@@ -121,7 +127,7 @@ export const SlotManagementResponseMessages = {
  //// Error Messages
   ErrorInvalidInputByIdIsRequired : "id is required",
   ErrorInvalidInputByIdandDateAreRequired : "id and date are required",
-
+  ErrorTimeSlotNotFound : "time slot not found",
 
 
   ErrorMentorProfileNotfound : "mentor profile not found",
@@ -129,8 +135,9 @@ export const SlotManagementResponseMessages = {
   ErrorTimeSlotsNotFoundByDate :(date:string)=> ` time slots not found on  ${date}`,
 
   ErrorFailedToFetchTimeSlots : "failed to fetch time slots",
+  ErrorFailedToFetchTimeSlot: "failed to fetch time slot ",
    ErrorFailedToUpdateTimeSlots : "failed to update time slots",
-
+ErrorFailedToUpdateBookingStatusOfTimeSlot:"failed to update Booking Status of time slot",
 
 
   //// Success Messages
@@ -138,4 +145,17 @@ export const SlotManagementResponseMessages = {
   SuccessDefaultTimeSlotsFetched : "successfully fetched default time slots",
   SuccessTimeSlotsFetchedByDate :(date:string) =>`successfully fetched  time slots on ${date}`,
   SuccessTimeSlotsUpdatedByDate :(date:string) =>`successfully updated  time slots on ${date}`,
+}
+
+export const BookingManagementResponseMessages = {
+
+  ErrorInvalidInputBystatusTocreateBooking : (status:string)=>`Invalid status value: ${status} to create booking`,
+  ErrorInvalidInputByTimeFormat :(time:string)=>`invalid ${time} format to create book`,
+
+  ErrorFailedToUpdateTimeSlots : "failed to update time slots",
+  ErrorMentorProfileNotfound : "mentor profile not found",
+  ErrorTimeSlotNotFound : "time slot not found",
+  ErrorTimeSlotAlreadyBooked : "time slot already booked",
+
+ErrorFailedToCreateBooking : "Failed to create Booking"
 }

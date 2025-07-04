@@ -26,6 +26,6 @@ export async function refreshAccessToken() {
 
     return { access_token: newAccessToken, expires_at };
   } catch (error) {
-    throw new Error("Invalid refresh token");
+    return null
   }
 }

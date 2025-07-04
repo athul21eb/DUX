@@ -28,7 +28,7 @@ interface slot {
   end: string;
 }
 
-export const create_stripe_checkout_Server_Action = async (
+export const create_stripe_checkout_Server_Actionsss = async (
   mentorId: string,
   timeSlotId: string,
   date: string,
@@ -159,8 +159,7 @@ export const create_stripe_checkout_Server_Action = async (
     // });
 
     const session = await stripe.checkout.sessions.create({
-      // Specify the mode (e.g., "payment" or "subscription")
-      payment_method_types: ["card"], // This is valid for older API versions; check your Stripe API version
+      payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
@@ -187,20 +186,19 @@ export const create_stripe_checkout_Server_Action = async (
         mentorExpertise: mentor.expertise,
         amount: mentor.hourlyRate.toString(), // Store as string to avoid precision issues
       },
-
       mode: "payment",
-
       success_url: `${process.env.NEXTAUTH_URL}/mentors/${mentorId}/booking/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXTAUTH_URL}/mentors/${mentorId}/booking/success?cancelled=true&&booking_id=${booking.id}&&time_slot_id=${bookingslotId}`,
     });
 
-    await prisma.timeSlot.update({
-      where: { id: bookingslotId },
+    await timeSlotService.changeStatusOfIsBooked(bookingslotId, true);
+    // await prisma.timeSlot.update({
+    //   where: { id: bookingslotId },
 
-      data: {
-        isBooked: true,
-      },
-    });
+    //   data: {
+    //     isBooked: true,
+    //   },
+    // });
 
     // 5. Update the booking with the session ID
     //  const  presenter =  { sessionId: session.id, sessionUrl: session.url };

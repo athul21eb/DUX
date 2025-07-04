@@ -15,6 +15,7 @@ import { Link } from "next-view-transitions";
 import MentorSearch from "@/components/shared/mentor-search";
 import Stats from "@/components/shared/stats-count-up";
 
+
 // SEO metadata
 export const metadata: Metadata = {
   title: "DUX - Find Your Perfect Mentor | Professional Guidance Platform",
